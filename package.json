@@ -6,6 +6,8 @@
   "author": "<nmtxma2004@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "6.14.0",
+    "prisma": "^6.14.0",
     "selenium-webdriver": "^4.35.0"
   },
   "devDependencies": {
