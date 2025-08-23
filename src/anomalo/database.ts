@@ -50,12 +50,38 @@ export class AnomaloJobRepository {
     }
   }
 
+  async updateMany(
+    ids: string[],
+    data: Prisma.AnomaloJobUpdateInput
+  ): Promise<boolean> {
+    try {
+      await this.prisma.anomaloJob.updateMany({
+        where: { id: { in: ids } },
+        data,
+      });
+      return true;
+    } catch (error) {
+      console.error("Error updating AnomaloJobs:", error);
+      return false;
+    }
+  }
+
   async delete(id: string): Promise<boolean> {
     try {
       await this.prisma.anomaloJob.delete({ where: { id } });
       return true;
     } catch (error) {
       console.error("Error deleting AnomaloJob:", error);
+      return false;
+    }
+  }
+
+  async deleteMany(ids: string[]): Promise<boolean> {
+    try {
+      await this.prisma.anomaloJob.deleteMany({ where: { id: { in: ids } } });
+      return true;
+    } catch (error) {
+      console.error("Error deleting AnomaloJobs:", error);
       return false;
     }
   }
