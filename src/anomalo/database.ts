@@ -52,7 +52,7 @@ export class AnomaloJobRepository {
 
   async updateMany(
     ids: string[],
-    data: Prisma.AnomaloJobUpdateInput
+    data: Prisma.AnomaloJobUpdateInput[]
   ): Promise<boolean> {
     try {
       await this.prisma.anomaloJob.updateMany({
