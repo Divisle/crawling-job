@@ -3,17 +3,6 @@ import type { AnomaloJob, Prisma, PrismaClient } from "@prisma/client";
 export class AnomaloJobRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async create(
-    data: Prisma.AnomaloJobCreateInput
-  ): Promise<AnomaloJob | false> {
-    try {
-      return await this.prisma.anomaloJob.create({ data });
-    } catch (error) {
-      console.error("Error creating AnomaloJob:", error);
-      return false;
-    }
-  }
-
   async createMany(data: Prisma.AnomaloJobCreateInput[]): Promise<boolean> {
     try {
       await this.prisma.anomaloJob.createMany({ data });
@@ -38,18 +27,6 @@ export class AnomaloJobRepository {
     }
   }
 
-  async update(
-    id: string,
-    data: Prisma.AnomaloJobUpdateInput
-  ): Promise<AnomaloJob | false> {
-    try {
-      return await this.prisma.anomaloJob.update({ where: { id }, data });
-    } catch (error) {
-      console.error("Error updating AnomaloJob:", error);
-      return false;
-    }
-  }
-
   async updateMany(
     ids: string[],
     data: Prisma.AnomaloJobUpdateInput[]
@@ -62,16 +39,6 @@ export class AnomaloJobRepository {
       return true;
     } catch (error) {
       console.error("Error updating AnomaloJobs:", error);
-      return false;
-    }
-  }
-
-  async delete(id: string): Promise<boolean> {
-    try {
-      await this.prisma.anomaloJob.delete({ where: { id } });
-      return true;
-    } catch (error) {
-      console.error("Error deleting AnomaloJob:", error);
       return false;
     }
   }

@@ -21,10 +21,6 @@ export class AnomaloJobScraper {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    if (!process.env.SLACK_SECOND_CHANNEL_ID) {
-      console.log("SLACK_SECOND_CHANNEL_ID is not defined");
-      return process.exit(1);
-    }
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
     const options = new Options();
     options.addArguments("--headless");
@@ -112,7 +108,7 @@ export class AnomaloJobScraper {
     const blockMessage = buildDefaultJobMessage(data);
     console.log(blockMessage);
     await this.app.chat.postMessage({
-      channel: "C098K61KNLT",
+      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
       blocks: blockMessage,
     });
   }
