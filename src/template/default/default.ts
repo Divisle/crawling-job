@@ -64,13 +64,84 @@ export function buildDefaultJobMessage(data: DefaultJobMessageData) {
           },
           {
             type: "mrkdwn",
-            location: job.location,
+            text: job.location ? job.location : "No location provided",
           },
         ],
       });
       blocks.push(divider);
     });
   }
-  blocks.push(divider);
+
+  if (data.updateJobs.length > 0) {
+    blocks.push({
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "Updated Jobs",
+        emoji: true,
+      },
+    });
+    data.updateJobs.forEach((job) => {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*<${job.href}|${job.title}>*\nDepartment: ${job.department}`,
+        },
+      });
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "image",
+            image_url:
+              "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
+            alt_text: "Location",
+          },
+          {
+            type: "mrkdwn",
+            text: job.location ? job.location : "No location provided",
+          },
+        ],
+      });
+      blocks.push(divider);
+    });
+  }
+
+  if (data.deleteJobs.length > 0) {
+    blocks.push({
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "Deleted Jobs",
+        emoji: true,
+      },
+    });
+    data.deleteJobs.forEach((job) => {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*<${job.href}|${job.title}>*\nDepartment: ${job.department}`,
+        },
+      });
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "image",
+            image_url:
+              "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
+            alt_text: "Location",
+          },
+          {
+            type: "mrkdwn",
+            text: job.location ? job.location : "No location provided",
+          },
+        ],
+      });
+      blocks.push(divider);
+    });
+  }
   return blocks;
 }
