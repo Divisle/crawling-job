@@ -95,7 +95,13 @@ export class AnomaloJobRepository {
       oldJobData.every((oldJob) => oldJob.href !== newJob.href)
     );
     const updateJobs = oldJobData.filter((oldJob) =>
-      datas.some((newJob) => newJob.href === oldJob.href && newJob !== oldJob)
+      datas.some(
+        (newJob) =>
+          newJob.href === oldJob.href &&
+          newJob.title !== oldJob.title &&
+          newJob.location !== oldJob.location &&
+          newJob.department !== oldJob.department
+      )
     );
 
     return { deleteJobs, newJobs, updateJobs };

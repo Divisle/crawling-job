@@ -11,10 +11,21 @@ import { WebClient } from "@slack/web-api";
 
 export class AnomaloJobScraper {
   private driver: WebDriver;
-  constructor(
-    private db = new AnomaloJobRepository(new PrismaClient()),
-    private app = new WebClient(process.env.SLACK_BOT_TOKEN)
-  ) {
+  private app: WebClient;
+  constructor(private db = new AnomaloJobRepository(new PrismaClient())) {
+    if (!process.env.SLACK_BOT_TOKEN) {
+      console.log("SLACK_BOT_TOKEN is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_SECOND_CHANNEL_ID) {
+      console.log("SLACK_SECOND_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
     const options = new Options();
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -56,12 +67,18 @@ export class AnomaloJobScraper {
     jobData: Prisma.AnomaloJobCreateInput[]
   ): Promise<DefaultJobMessageData> {
     const filterData = await this.db.compareData(jobData);
-    await this.db.createMany(filterData.newJobs);
-    await this.db.updateMany(
-      filterData.updateJobs.map((job) => job.id),
-      filterData.updateJobs
-    );
-    await this.db.deleteMany(filterData.deleteJobs.map((job) => job.id));
+    if (filterData.newJobs.length !== 0) {
+      await this.db.createMany(filterData.newJobs);
+    }
+    if (filterData.updateJobs.length !== 0) {
+      await this.db.updateMany(
+        filterData.updateJobs.map((job) => job.id),
+        filterData.updateJobs
+      );
+    }
+    if (filterData.deleteJobs.length !== 0) {
+      await this.db.deleteMany(filterData.deleteJobs.map((job) => job.id));
+    }
     const messageData = {
       newJobs: filterData.newJobs.map((e) => {
         return {
@@ -93,25 +110,22 @@ export class AnomaloJobScraper {
 
   async sendMessage(data: DefaultJobMessageData) {
     const blockMessage = buildDefaultJobMessage(data);
-    this.app.chat.postMessage({
+    console.log(blockMessage);
+    await this.app.chat.postMessage({
       channel: "C098K61KNLT",
       blocks: blockMessage,
     });
+  }
+
+  static async run() {
+    const scraper = new AnomaloJobScraper();
+    const jobData = await scraper.scrapeJobs();
+    const filteredData = await scraper.filterData(jobData);
+    await scraper.sendMessage(filteredData);
+    await scraper.close();
   }
 
   async close() {
     await this.driver.quit();
   }
 }
-export async function test() {
-  const scraper = new AnomaloJobScraper();
-  scraper.sendMessage({
-    newJobs: [],
-    deleteJobs: [],
-    updateJobs: [],
-  });
-  // await scraper.scrapeJobs();
-  // await scraper.close();
-}
-
-test();
