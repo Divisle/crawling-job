@@ -88,7 +88,7 @@ export class NumericJobScraper {
     updateJobs: NumericJobInterface[];
   }> {
     const filterData = await this.db.compareData(jobData);
-    await this.db.createMany(filterData.newJobs);
+
     await this.db.deleteMany(
       filterData.deleteJobs
         .filter((job) => job.id !== undefined)
@@ -99,6 +99,7 @@ export class NumericJobScraper {
         .filter((job) => job.id !== undefined)
         .map((job) => job.id!)
     );
+    await this.db.createMany(filterData.newJobs);
     await this.db.createMany(filterData.updateJobs);
     return filterData;
   }
@@ -115,16 +116,10 @@ export class NumericJobScraper {
 
   static async run() {
     const scraper = new NumericJobScraper();
-    // const data = await scraper.scrapeJobs();
-    // const filteredData = await scraper.filterData(data);
-    // // console.log(filteredData);
-    // await scraper.close();
-    (await scraper.db.findMany()).forEach((job) => {
-      console.log(job.title + " - " + job.company);
-      job.tags.forEach((tag) => {
-        console.log(` - ${tag.tag}`);
-      });
-    });
+    const data = await scraper.scrapeJobs();
+    const filteredData = await scraper.filterData(data);
+    console.log(filteredData);
+    await scraper.close();
   }
 }
 

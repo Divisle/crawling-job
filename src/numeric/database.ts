@@ -97,10 +97,11 @@ export class NumericJobRepository {
     existingJobs.forEach((job) => {
       if (
         !datas.some(
-          (newJob) => newJob.title !== job.title && newJob.href !== job.href
+          (newJob) => newJob.title === job.title && newJob.href === job.href
         )
       ) {
         deleteJobs.push({
+          id: job.id,
           title: job.title,
           company: job.company,
           address: job.address,
@@ -126,12 +127,12 @@ export class NumericJobRepository {
         existingJob.time !== newJob.time ||
         existingJob.company !== newJob.company
       ) {
-        updateJobs.push({ ...newJob });
+        updateJobs.push({ ...newJob, id: existingJob.id });
       } else {
         existingJob?.tags.sort((a, b) => a.tag.localeCompare(b.tag));
         newJob.tags!.sort((a, b) => a.localeCompare(b));
         if (JSON.stringify(existingJob?.tags) !== JSON.stringify(newJob.tags)) {
-          updateJobs.push({ ...newJob });
+          updateJobs.push({ ...newJob, id: existingJob.id });
         }
       }
     });
