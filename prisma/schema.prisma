@@ -30,24 +30,26 @@ model AnomaloJob {
 
 model NumericJob {
   id          String   @id @default(uuid())
-  title       String
+  title       String  
   company     String
   location_type    String
   address     String
   department  String
   time        String
-  href        String  @unique
+  href        String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   tags       NumericJobTag[]
+
+  @@unique([title, href])
 }
 
 model NumericJobTag {
   id          String   @id @default(uuid())
   jobId      String
   job        NumericJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  tag       String  @unique
+  tag       String  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
