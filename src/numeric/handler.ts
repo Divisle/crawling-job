@@ -19,7 +19,7 @@ export class NumericJobScraper {
     }
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
     const options = new Options();
-    // options.addArguments("--headless");
+    options.addArguments("--headless");
     options.addArguments("--no-sandbox");
     options.addArguments("--disable-dev-shm-usage");
     options.addArguments("--disable-gpu");
@@ -79,9 +79,35 @@ export class NumericJobScraper {
       }
       jobData.push(data);
     }
-    console.log(jobData);
     return jobData;
   }
+
+  async filterData(jobData: NumericJobInterface[]): Promise<{
+    newJobs: NumericJobInterface[];
+    deleteJobs: NumericJobInterface[];
+    updateJobs: NumericJobInterface[];
+  }> {
+    const filterData = await this.db.compareData(jobData);
+    await this.db.createMany(filterData.newJobs);
+    await this.db.deleteMany(
+      filterData.deleteJobs
+        .filter((job) => job.id !== undefined)
+        .map((job) => job.id!)
+    );
+    await this.db.deleteMany(
+      filterData.updateJobs
+        .filter((job) => job.id !== undefined)
+        .map((job) => job.id!)
+    );
+    await this.db.createMany(filterData.updateJobs);
+    return filterData;
+  }
+
+  async sendMessage(messageData: {
+    newJobs: NumericJobInterface[];
+    deleteJobs: NumericJobInterface[];
+    updateJobs: NumericJobInterface[];
+  }) {}
 
   async close() {
     await this.driver.quit();
@@ -89,8 +115,16 @@ export class NumericJobScraper {
 
   static async run() {
     const scraper = new NumericJobScraper();
-    await scraper.scrapeJobs();
-    await scraper.close();
+    // const data = await scraper.scrapeJobs();
+    // const filteredData = await scraper.filterData(data);
+    // // console.log(filteredData);
+    // await scraper.close();
+    (await scraper.db.findMany()).forEach((job) => {
+      console.log(job.title + " - " + job.company);
+      job.tags.forEach((tag) => {
+        console.log(` - ${tag.tag}`);
+      });
+    });
   }
 }
 
