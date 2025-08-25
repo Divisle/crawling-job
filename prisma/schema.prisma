@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
   
 }
 
@@ -45,7 +45,7 @@ model NumericJob {
 model NumericJobTag {
   id          String   @id @default(uuid())
   jobId      String
-  job        NumericJob @relation(fields: [jobId], references: [id])
+  job        NumericJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
   tag       String  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
