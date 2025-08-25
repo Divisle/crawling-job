@@ -50,7 +50,7 @@ export function buildDefaultJobMessage(data: DefaultJobMessageData) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\nDepartment: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
@@ -86,7 +86,7 @@ export function buildDefaultJobMessage(data: DefaultJobMessageData) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\nDepartment: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
@@ -122,7 +122,7 @@ export function buildDefaultJobMessage(data: DefaultJobMessageData) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\nDepartment: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
