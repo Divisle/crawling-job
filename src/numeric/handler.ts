@@ -1,0 +1,97 @@
+import { Prisma, PrismaClient } from "@prisma/client";
+import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Options } from "selenium-webdriver/chrome.js";
+import { NumericJobRepository } from "./database";
+import { buildDefaultJobMessage, NumericJobInterface } from "../template";
+import { WebClient } from "@slack/web-api";
+
+export class NumericJobScraper {
+  private driver: WebDriver;
+  private app: WebClient;
+  constructor(private db = new NumericJobRepository(new PrismaClient())) {
+    if (!process.env.SLACK_BOT_TOKEN) {
+      console.log("SLACK_BOT_TOKEN is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+    const options = new Options();
+    // options.addArguments("--headless");
+    options.addArguments("--no-sandbox");
+    options.addArguments("--disable-dev-shm-usage");
+    options.addArguments("--disable-gpu");
+
+    this.driver = new Builder()
+      .forBrowser("chrome")
+      .setChromeOptions(options)
+      .build();
+  }
+
+  async scrapeJobs(): Promise<any[]> {
+    await this.driver.get("https://www.numeric.io/accounting-careers-board");
+    // Find a div one class is "acc-careers_list"
+    const jobFeedWrapper = await this.driver.findElement(
+      By.className("acc-careers_list")
+    );
+    const jobElements = await jobFeedWrapper.findElements(
+      By.xpath(".//div[@class='acc-careers_list-item']")
+    );
+    const jobData: NumericJobInterface[] = [];
+    for (const jobElement of jobElements) {
+      let data: NumericJobInterface = {
+        company: "",
+        address: "",
+        title: "",
+        location_type: "",
+        department: "",
+        time: "",
+        href: "",
+        tags: [],
+      };
+      const headBlock = await jobElement.findElements(
+        By.xpath(".//div[@class='acc-careers_job-company-wrap']//div//div")
+      );
+      if (headBlock.length === 2) {
+        data.company = await headBlock[0].getText();
+        data.address = await headBlock[1].getText();
+      }
+      data.title = await jobElement.findElement(By.xpath(".//h3")).getText();
+      data.href = await jobElement
+        .findElement(By.xpath(".//a"))
+        .getAttribute("href");
+      const bodyBlock = await jobElement.findElements(
+        By.className("acc-careers_job-features")
+      );
+      if (bodyBlock.length === 3) {
+        data.location_type = await bodyBlock[0].getText();
+        data.department = await bodyBlock[1].getText();
+        data.time = await bodyBlock[2].getText();
+      }
+      // Find element contain class 'acc-careers_job-tags'
+      const tagBlock = await jobElement.findElements(
+        By.xpath(".//div[@class= 'acc-careers_job-tag']")
+      );
+      for (const tagElement of tagBlock) {
+        data.tags.push(await tagElement.getText());
+      }
+      jobData.push(data);
+    }
+    console.log(jobData);
+    return jobData;
+  }
+
+  async close() {
+    await this.driver.quit();
+  }
+
+  static async run() {
+    const scraper = new NumericJobScraper();
+    await scraper.scrapeJobs();
+    await scraper.close();
+  }
+}
+
+NumericJobScraper.run();

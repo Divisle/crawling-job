@@ -1,5 +1,4 @@
 export interface NumericJobInterface {
-  id: string;
   title: string;
   company: string;
   location_type: string;

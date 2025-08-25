@@ -2,11 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { AnomaloJobRepository } from "./database";
-import {
-  buildDefaultJobMessage,
-  DefaultJob,
-  DefaultJobMessageData,
-} from "../template";
+import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
 import { WebClient } from "@slack/web-api";
 
 export class AnomaloJobScraper {
