@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { NumericJobRepository } from "./database";
-import { buildDefaultJobMessage, NumericJobInterface } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildNumericJobMessage,
+  NumericJobInterface,
+} from "../template";
 import { WebClient } from "@slack/web-api";
 
 export class NumericJobScraper {
@@ -108,7 +112,13 @@ export class NumericJobScraper {
     newJobs: NumericJobInterface[];
     deleteJobs: NumericJobInterface[];
     updateJobs: NumericJobInterface[];
-  }) {}
+  }) {
+    const messageBlock = buildNumericJobMessage(messageData);
+    await this.app.chat.postMessage({
+      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      blocks: messageBlock,
+    });
+  }
 
   async close() {
     await this.driver.quit();
@@ -118,7 +128,7 @@ export class NumericJobScraper {
     const scraper = new NumericJobScraper();
     const data = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(data);
-    console.log(filteredData);
+    await scraper.sendMessage(filteredData);
     await scraper.close();
   }
 }

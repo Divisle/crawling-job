@@ -129,9 +129,14 @@ export class NumericJobRepository {
       ) {
         updateJobs.push({ ...newJob, id: existingJob.id });
       } else {
-        existingJob?.tags.sort((a, b) => a.tag.localeCompare(b.tag));
-        newJob.tags!.sort((a, b) => a.localeCompare(b));
-        if (JSON.stringify(existingJob?.tags) !== JSON.stringify(newJob.tags)) {
+        if (existingJob.tags.length === newJob.tags.length) {
+          for (const tag of newJob.tags) {
+            if (!existingJob.tags.some((t) => t.tag === tag)) {
+              updateJobs.push({ ...newJob, id: existingJob.id });
+              break;
+            }
+          }
+        } else {
           updateJobs.push({ ...newJob, id: existingJob.id });
         }
       }
