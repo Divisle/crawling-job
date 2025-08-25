@@ -67,7 +67,8 @@ export class NumericJobRepository {
         existingJob.location_type !== newJob.location_type ||
         existingJob.address !== newJob.address ||
         existingJob.department !== newJob.department ||
-        existingJob.time !== newJob.time
+        existingJob.time !== newJob.time ||
+        existingJob.company !== newJob.company
       ) {
         updateJobs.push({ ...newJob, id: existingJob.id });
       } else {

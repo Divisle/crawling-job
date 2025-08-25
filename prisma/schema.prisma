@@ -31,6 +31,7 @@ model AnomaloJob {
 model NumericJob {
   id          String   @id @default(uuid())
   title       String
+  company     String
   location_type    String
   address     String
   department  String
