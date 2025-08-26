@@ -1,4 +1,4 @@
-import { CredoJob, Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { CredoJobRepository } from "./database";
 import { buildCredoJobMessage, CredoApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";

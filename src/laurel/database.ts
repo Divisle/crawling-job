@@ -7,7 +7,7 @@ export class LaurelRepository {
     return await this.prisma.laurelJob.findMany();
   }
 
-  async createMany(data: LaurelJob[]): Promise<boolean> {
+  async createMany(data: Prisma.LaurelJobCreateInput[]): Promise<boolean> {
     try {
       await this.prisma.laurelJob.createMany({
         data,
