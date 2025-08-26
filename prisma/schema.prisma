@@ -60,7 +60,7 @@ model CredoJob {
   title       String  
   location    String
   department  String
-  workplaceType String
+  workplaceType String?
   employmentType String
   href        String  
   createdAt   DateTime @default(now())

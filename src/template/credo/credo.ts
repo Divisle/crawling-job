@@ -1,26 +1,35 @@
 export interface CredoApiPayload {
   data: {
     jobBoard: {
-      team: [
+      teams: [
         {
-          id: String;
-          name: String;
-          parentTeamId: String;
+          id: string;
+          name: string;
+          parentTeamId: string;
         }
       ];
-      jobs: [
+      jobPostings: [
         {
-          id: String;
-          title: String;
-          teamId: String;
-          locationId: String;
-          locationName: String;
-          workplaceType: String;
-          employmentType: String;
+          id: string;
+          title: string;
+          teamId: string;
+          locationId: string;
+          locationName: string;
+          workplaceType: string | null;
+          employmentType: string;
           secondaryLocations: any[];
-          compensationTierSummary: String | null;
+          compensationTierSummary: string | null;
         }
       ];
     };
   };
+}
+
+export interface CredoJob {
+  id: String;
+  title: String;
+  department: String;
+  location: String;
+  workplaceType: String;
+  employmentType: String;
 }

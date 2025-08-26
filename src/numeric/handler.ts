@@ -1,12 +1,8 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { NumericJobRepository } from "./database";
-import {
-  buildDefaultJobMessage,
-  buildNumericJobMessage,
-  NumericJobInterface,
-} from "../template";
+import { buildNumericJobMessage, NumericJobInterface } from "../template";
 import { WebClient } from "@slack/web-api";
 
 export class NumericJobScraper {
