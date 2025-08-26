@@ -27,22 +27,6 @@ export class AnomaloJobRepository {
     }
   }
 
-  async updateMany(
-    ids: string[],
-    data: Prisma.AnomaloJobUpdateInput[]
-  ): Promise<boolean> {
-    try {
-      await this.prisma.anomaloJob.updateMany({
-        where: { id: { in: ids } },
-        data,
-      });
-      return true;
-    } catch (error) {
-      console.error("Error updating AnomaloJobs:", error);
-      return false;
-    }
-  }
-
   async deleteMany(ids: string[]): Promise<boolean> {
     try {
       await this.prisma.anomaloJob.deleteMany({ where: { id: { in: ids } } });
@@ -64,9 +48,9 @@ export class AnomaloJobRepository {
     const updateJobs = oldJobData.filter((oldJob) =>
       datas.some(
         (newJob) =>
-          newJob.href === oldJob.href &&
-          newJob.title !== oldJob.title &&
-          newJob.location !== oldJob.location &&
+          newJob.href === oldJob.href ||
+          newJob.title !== oldJob.title ||
+          newJob.location !== oldJob.location ||
           newJob.department !== oldJob.department
       )
     );

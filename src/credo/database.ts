@@ -17,21 +17,6 @@ export class CredoJobRepository {
     }
   }
 
-  async updateMany(data: Prisma.CredoJobUpdateInput[]) {
-    try {
-      await this.prisma.credoJob.updateMany({
-        where: {
-          jobId: { in: data.map((job) => job.jobId!.toString()) },
-        },
-        data,
-      });
-      return true;
-    } catch (error) {
-      console.error("Error updating Credo jobs:", error);
-      return false;
-    }
-  }
-
   async deleteMany(ids: string[]) {
     try {
       await this.prisma.credoJob.deleteMany({ where: { id: { in: ids } } });
@@ -45,12 +30,12 @@ export class CredoJobRepository {
   async compareData(jobData: Prisma.CredoJobCreateInput[]): Promise<{
     newJobs: Prisma.CredoJobCreateInput[];
     deleteJobs: Prisma.CredoJobCreateInput[];
-    updateJobs: Prisma.CredoJobCreateInput[];
+    updateJobs: Prisma.CredoJobUpdateInput[];
   }> {
     const existingJobs = await this.getAll();
     const newJobs: Prisma.CredoJobCreateInput[] = [];
     const deleteJobs: Prisma.CredoJobCreateInput[] = [];
-    const updateJobs: Prisma.CredoJobCreateInput[] = [];
+    const updateJobs: Prisma.CredoJobUpdateInput[] = [];
 
     // Compare incoming job data with existing jobs
     for (const job of jobData) {
@@ -65,7 +50,7 @@ export class CredoJobRepository {
         job.href !== existingJob.href ||
         job.employmentType !== existingJob.employmentType
       ) {
-        updateJobs.push(job);
+        updateJobs.push({ ...job, id: existingJob.id });
       }
     }
 

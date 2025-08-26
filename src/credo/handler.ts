@@ -1,6 +1,6 @@
 import { CredoJob, Prisma, PrismaClient } from "@prisma/client";
 import { CredoJobRepository } from "./database";
-import { CredoApiPayload } from "../template";
+import { buildCredoJobMessage, CredoApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
 export class CredoJobHandler {
@@ -54,26 +54,52 @@ export class CredoJobHandler {
     }
   }
 
-  async handleJobData(jobData: Prisma.CredoJobCreateInput[]) {
-    const filteredData = await this.filterData(jobData);
-    // await this.sendMessage(filteredData);
-  }
-
   async filterData(jobData: Prisma.CredoJobCreateInput[]): Promise<{
     newJobs: Prisma.CredoJobCreateInput[];
     deleteJobs: Prisma.CredoJobCreateInput[];
-    updateJobs: Prisma.CredoJobCreateInput[];
+    updateJobs: Prisma.CredoJobUpdateInput[];
   }> {
     const filterData = await this.db.compareData(jobData);
-
-    await this.db.deleteMany(
-      filterData.deleteJobs
-        .filter((job) => job.id !== undefined)
-        .map((job) => job.id!)
-    );
-    await this.db.createMany(filterData.newJobs);
-    await this.db.updateMany(filterData.updateJobs);
+    if (filterData.deleteJobs.length > 0) {
+      await this.db.deleteMany(
+        filterData.deleteJobs
+          .filter((job) => job.id !== undefined)
+          .map((job) => job.id!)
+      );
+    }
+    if (filterData.newJobs.length > 0) {
+      await this.db.createMany(filterData.newJobs);
+    }
+    if (filterData.updateJobs.length > 0) {
+      await this.db.deleteMany(
+        filterData.updateJobs.map((job) => job.id!.toString())
+      );
+      await this.db.createMany(
+        filterData.updateJobs.map((job) => {
+          const { id, ...rest } = job;
+          return rest as Prisma.CredoJobCreateInput;
+        })
+      );
+    }
     return filterData;
+  }
+
+  async sendMessage(data: {
+    newJobs: Prisma.CredoJobCreateInput[];
+    deleteJobs: Prisma.CredoJobCreateInput[];
+    updateJobs: Prisma.CredoJobUpdateInput[];
+  }) {
+    const blocks = await buildCredoJobMessage(data);
+    try {
+      await this.app.chat.postMessage({
+        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        blocks,
+      });
+      console.log("Message sent successfully");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   }
 
   static async run() {

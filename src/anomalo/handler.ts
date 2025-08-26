@@ -63,9 +63,12 @@ export class AnomaloJobScraper {
       await this.db.createMany(filterData.newJobs);
     }
     if (filterData.updateJobs.length !== 0) {
-      await this.db.updateMany(
-        filterData.updateJobs.map((job) => job.id),
-        filterData.updateJobs
+      await this.db.deleteMany(filterData.updateJobs.map((job) => job.id));
+      await this.db.createMany(
+        filterData.updateJobs.map((job) => {
+          const { id, ...rest } = job;
+          return rest;
+        })
       );
     }
     if (filterData.deleteJobs.length !== 0) {
@@ -101,8 +104,11 @@ export class AnomaloJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blockMessage = buildDefaultJobMessage(data);
-    console.log(blockMessage);
+    const blockMessage = buildDefaultJobMessage(
+      data,
+      "Anomalo",
+      "https://www.anomalo.com"
+    );
     await this.app.chat.postMessage({
       channel: process.env.SLACK_FIRST_CHANNEL_ID!,
       blocks: blockMessage,
@@ -121,3 +127,5 @@ export class AnomaloJobScraper {
     await this.driver.quit();
   }
 }
+
+AnomaloJobScraper.run();

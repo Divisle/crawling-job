@@ -11,7 +11,11 @@ export interface DefaultJobMessageData {
   updateJobs: DefaultJob[];
 }
 
-export function buildDefaultJobMessage(data: DefaultJobMessageData) {
+export function buildDefaultJobMessage(
+  data: DefaultJobMessageData,
+  company: string,
+  company_url: string
+) {
   const blocks: any[] = [];
   const divider = {
     type: "divider",
@@ -20,7 +24,7 @@ export function buildDefaultJobMessage(data: DefaultJobMessageData) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed*`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <${company_url}|${company}>`,
     },
   });
   if (
