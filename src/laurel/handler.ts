@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LaurelRepository } from "./database";
-import { LaurelApiPayload } from "../template";
+import { buildLaurelJobMessage, LaurelApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
 export class LaurelJobHandler {
@@ -68,18 +68,17 @@ export class LaurelJobHandler {
     deleteJobs: Prisma.LaurelJobCreateInput[];
     updateJobs: Prisma.LaurelJobCreateInput[];
   }) {
-    console.log(data);
-    // const blocks = await buildCredoJobMessage(data);
-    // try {
-    //   await this.app.chat.postMessage({
-    //     // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-    //     channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-    //     blocks: [],
-    //   });
-    //   console.log("Message sent successfully");
-    // } catch (error) {
-    //   console.error("Error sending message:", error);
-    // }
+    const blocks = await buildLaurelJobMessage(data);
+    try {
+      await this.app.chat.postMessage({
+        channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        blocks,
+      });
+      console.log("Message sent successfully");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   }
 
   static async run() {
