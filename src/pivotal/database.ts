@@ -37,12 +37,12 @@ export class PivotalJobRepository {
 
   async compareData(data: Prisma.PivotalJobCreateInput[]): Promise<{
     newJobs: Prisma.PivotalJobCreateInput[];
-    updatedJobs: Prisma.PivotalJobCreateInput[];
-    deletedJobs: Prisma.PivotalJobCreateInput[];
+    updateJobs: Prisma.PivotalJobCreateInput[];
+    deleteJobs: Prisma.PivotalJobCreateInput[];
   }> {
     const newJobs: Prisma.PivotalJobCreateInput[] = [];
-    const updatedJobs: Prisma.PivotalJobCreateInput[] = [];
-    const deletedJobs: Prisma.PivotalJobCreateInput[] = [];
+    const updateJobs: Prisma.PivotalJobCreateInput[] = [];
+    const deleteJobs: Prisma.PivotalJobCreateInput[] = [];
     const existingJobs = await this.getAll();
     data.forEach((job) => {
       const existingJob = existingJobs.find((j) => j.href === job.href);
@@ -52,7 +52,7 @@ export class PivotalJobRepository {
         existingJob.title !== job.title ||
         existingJob.location !== job.location
       ) {
-        updatedJobs.push({
+        updateJobs.push({
           ...job,
           id: existingJob.id,
         });
@@ -61,13 +61,13 @@ export class PivotalJobRepository {
     existingJobs.forEach((job) => {
       const found = data.find((j) => j.href === job.href);
       if (!found) {
-        deletedJobs.push(job);
+        deleteJobs.push(job);
       }
     });
     return {
       newJobs,
-      updatedJobs,
-      deletedJobs,
+      updateJobs,
+      deleteJobs,
     };
   }
 }

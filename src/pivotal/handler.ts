@@ -2,8 +2,8 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { PivotalJobRepository } from "./database";
-import { buildNumericJobMessage, NumericJobInterface } from "../template";
 import { WebClient } from "@slack/web-api";
+import { buildPivotalJobMessage } from "../template";
 
 export class PivotalJobScraper {
   private driver: WebDriver;
@@ -67,17 +67,17 @@ export class PivotalJobScraper {
 
   async filterData(jobData: Prisma.PivotalJobCreateInput[]): Promise<{
     newJobs: Prisma.PivotalJobCreateInput[];
-    deletedJobs: Prisma.PivotalJobCreateInput[];
-    updatedJobs: Prisma.PivotalJobCreateInput[];
+    deleteJobs: Prisma.PivotalJobCreateInput[];
+    updateJobs: Prisma.PivotalJobCreateInput[];
   }> {
     const filteredData = await this.db.compareData(jobData);
     const listDeletedIds = [
-      ...filteredData.deletedJobs.map((job) => job.id!),
-      ...filteredData.updatedJobs.map((job) => job.id!),
+      ...filteredData.deleteJobs.map((job) => job.id!),
+      ...filteredData.updateJobs.map((job) => job.id!),
     ];
     const listCreateData = [
       ...filteredData.newJobs,
-      ...filteredData.updatedJobs.map((job) => {
+      ...filteredData.updateJobs.map((job) => {
         const { id, ...rest } = job;
         return {
           ...rest,
@@ -90,10 +90,22 @@ export class PivotalJobScraper {
   }
 
   async sendMessage(messageData: {
-    newJobs: NumericJobInterface[];
-    deleteJobs: NumericJobInterface[];
-    updateJobs: NumericJobInterface[];
-  }) {}
+    newJobs: Prisma.PivotalJobCreateInput[];
+    deleteJobs: Prisma.PivotalJobCreateInput[];
+    updateJobs: Prisma.PivotalJobCreateInput[];
+  }) {
+    const blocks = await buildPivotalJobMessage(messageData);
+    try {
+      await this.app.chat.postMessage({
+        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        blocks,
+      });
+      console.log("Message sent successfully");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  }
 
   async close() {
     await this.driver.quit();
@@ -103,7 +115,7 @@ export class PivotalJobScraper {
     const scraper = new PivotalJobScraper();
     const data = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(data);
-    // await scraper.sendMessage(filteredData);
+    await scraper.sendMessage(filteredData);
     await scraper.close();
   }
 }
