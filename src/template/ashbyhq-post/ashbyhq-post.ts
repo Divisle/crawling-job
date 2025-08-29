@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export interface CredoApiPayload {
+export interface AshbyhqPostApiPayload {
   data: {
     jobBoard: {
       teams: [
@@ -19,14 +19,31 @@ export interface CredoApiPayload {
           locationName: string;
           workplaceType: string | null;
           employmentType: string;
-          secondaryLocations: any[];
+          secondaryLocations: {
+            locationId: string;
+            locationName: string;
+            __typename: string;
+          }[];
           compensationTierSummary: string | null;
         }
       ];
     };
   };
 }
-
+export interface ChecklyJobInterface {
+  id?: string;
+  jobId: string;
+  title: string;
+  department: string;
+  location: string;
+  employmentType: string;
+  workplaceType: string | null;
+  href: string;
+  checklyLocation: {
+    locationId: string;
+    locationName: string;
+  }[];
+}
 export async function buildCredoJobMessage(data: {
   newJobs: Prisma.CredoJobCreateInput[];
   updateJobs: Prisma.CredoJobUpdateInput[];

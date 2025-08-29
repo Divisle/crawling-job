@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LaurelRepository } from "./database";
-import { buildLaurelJobMessage, LaurelApiPayload } from "../template";
+import { buildLaurelJobMessage, AshbyhqApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
 export class LaurelJobHandler {
@@ -20,7 +20,7 @@ export class LaurelJobHandler {
   async scrapeJobs(): Promise<Prisma.LaurelJobCreateInput[]> {
     try {
       const response: {
-        data: LaurelApiPayload;
+        data: AshbyhqApiPayload;
       } = await axios.get(
         "https://api.ashbyhq.com/posting-api/job-board/Laurel"
       );

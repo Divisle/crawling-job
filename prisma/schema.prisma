@@ -94,7 +94,7 @@ model ChecklyJob {
   title       String  
   department  String
   location    String
-  workplaceType String
+  workplaceType String?
   employmentType String
   href        String  @unique
   createdAt   DateTime @default(now())
@@ -106,6 +106,7 @@ model ChecklyJob {
 model ChecklyLocation {
   id          String   @id @default(uuid())
   locationId  String   @unique
+  locationName String
   checklyJob  ChecklyJob @relation(fields: [checklyJobId], references: [id], onDelete: Cascade)
   checklyJobId String
   createdAt   DateTime @default(now())

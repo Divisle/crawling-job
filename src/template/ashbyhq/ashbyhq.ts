@@ -26,20 +26,6 @@ export interface AshbyhqApiPayload {
   ];
 }
 
-export interface ChecklyJobInterface {
-  jobId: string;
-  title: string;
-  department: string;
-  location: string;
-  employmentType: string;
-  workplaceType: string;
-  href: string;
-  checklyLocation: {
-    locationId: string;
-    locationName: string;
-  }[];
-}
-
 export async function buildLaurelJobMessage(data: {
   newJobs: Prisma.LaurelJobCreateInput[];
   updateJobs: Prisma.LaurelJobUpdateInput[];

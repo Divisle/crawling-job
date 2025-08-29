@@ -1,11 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { CredoJobRepository } from "./database";
-import { buildCredoJobMessage, AshbyhqPostApiPayload } from "../template";
+import { ChecklyRepository } from "./database";
+import { AshbyhqPostApiPayload, ChecklyJobInterface } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
-export class CredoJobHandler {
+
+export class ChecklyJobHandler {
   private app: WebClient;
-  constructor(private db = new CredoJobRepository(new PrismaClient())) {
+  constructor(private db = new ChecklyRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -17,11 +18,11 @@ export class CredoJobHandler {
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
-  async scrapeJobs(): Promise<Prisma.CredoJobCreateInput[]> {
+  async scrapeJobs(): Promise<ChecklyJobInterface[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "credo.ai",
+        organizationHostedJobsPageName: "checkly",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -34,7 +35,7 @@ export class CredoJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.CredoJobCreateInput[] =
+      const data: ChecklyJobInterface[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           jobId: posting.id,
           title: posting.title,
@@ -46,6 +47,10 @@ export class CredoJobHandler {
           workplaceType: posting.workplaceType,
           employmentType: posting.employmentType,
           href: `https://www.credo.ai/jobs?ashby_jid=${posting.id}`,
+          checklyLocation: posting.secondaryLocations.map((loc) => ({
+            locationId: loc.locationId,
+            locationName: loc.locationName,
+          })),
         }));
       return data;
     } catch (error) {
@@ -54,47 +59,40 @@ export class CredoJobHandler {
     }
   }
 
-  async filterData(jobData: Prisma.CredoJobCreateInput[]): Promise<{
-    newJobs: Prisma.CredoJobCreateInput[];
-    deleteJobs: Prisma.CredoJobCreateInput[];
-    updateJobs: Prisma.CredoJobUpdateInput[];
+  async filterData(jobData: ChecklyJobInterface[]): Promise<{
+    newJobs: ChecklyJobInterface[];
+    deleteJobs: ChecklyJobInterface[];
+    updateJobs: ChecklyJobInterface[];
   }> {
     const filterData = await this.db.compareData(jobData);
-    if (filterData.deleteJobs.length > 0) {
-      await this.db.deleteMany(
-        filterData.deleteJobs
-          .filter((job) => job.id !== undefined)
-          .map((job) => job.id!)
-      );
-    }
-    if (filterData.newJobs.length > 0) {
-      await this.db.createMany(filterData.newJobs);
-    }
-    if (filterData.updateJobs.length > 0) {
-      await this.db.deleteMany(
-        filterData.updateJobs.map((job) => job.id!.toString())
-      );
-      await this.db.createMany(
-        filterData.updateJobs.map((job) => {
-          const { id, ...rest } = job;
-          return rest as Prisma.CredoJobCreateInput;
-        })
-      );
-    }
+    const listDeleteId = [
+      ...filterData.deleteJobs.map((job) => job.id!),
+      ...filterData.updateJobs.map((job) => job.id!),
+    ];
+    const listCreateData = [
+      ...filterData.newJobs,
+      ...filterData.updateJobs.map((job) => ({
+        ...job,
+        id: undefined,
+      })),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listCreateData);
     return filterData;
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.CredoJobCreateInput[];
-    deleteJobs: Prisma.CredoJobCreateInput[];
-    updateJobs: Prisma.CredoJobUpdateInput[];
+    newJobs: Prisma.LaurelJobCreateInput[];
+    deleteJobs: Prisma.LaurelJobCreateInput[];
+    updateJobs: Prisma.LaurelJobCreateInput[];
   }) {
-    const blocks = await buildCredoJobMessage(data);
+    // const blocks = await buildLaurelJobMessage(data);
     try {
       await this.app.chat.postMessage({
         // channel: process.env.SLACK_TEST_CHANNEL_ID!,
         channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-        blocks,
+        // blocks,
+        blocks: [],
       });
       console.log("Message sent successfully");
     } catch (error) {
@@ -103,11 +101,14 @@ export class CredoJobHandler {
   }
 
   static async run() {
-    const handler = new CredoJobHandler();
+    const handler = new ChecklyJobHandler();
+    console.log(handler);
     const data = await handler.scrapeJobs();
+    console.log(data);
     const filteredData = await handler.filterData(data);
-    await handler.sendMessage(filteredData);
+    console.log(filteredData);
+    // await handler.sendMessage(filteredData);
   }
 }
 
-CredoJobHandler.run();
+ChecklyJobHandler.run();
