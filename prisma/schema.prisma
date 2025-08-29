@@ -87,3 +87,27 @@ model PivotalJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model ChecklyJob {
+  id          String   @id @default(uuid())
+  jobId      String @unique
+  title       String  
+  department  String
+  location    String
+  workplaceType String
+  employmentType String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  checklyLocation ChecklyLocation[]
+}
+
+model ChecklyLocation {
+  id          String   @id @default(uuid())
+  locationId  String   @unique
+  checklyJob  ChecklyJob @relation(fields: [checklyJobId], references: [id], onDelete: Cascade)
+  checklyJobId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
