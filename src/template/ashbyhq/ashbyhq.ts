@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export interface LaurelApiPayload {
+export interface AshbyhqApiPayload {
   jobs: [
     {
       id: string;
@@ -9,7 +9,11 @@ export interface LaurelApiPayload {
       team: string;
       employmentType: string;
       location: string;
-      secondaryLocations: any[];
+      secondaryLocations: {
+        locationId: string;
+        locationName: string;
+        __typename: string;
+      }[];
       publishedAt: string;
       isListed: boolean;
       isRemote: boolean | null;
@@ -20,6 +24,20 @@ export interface LaurelApiPayload {
       descriptionPlain: string;
     }
   ];
+}
+
+export interface ChecklyJobInterface {
+  jobId: string;
+  title: string;
+  department: string;
+  location: string;
+  employmentType: string;
+  workplaceType: string;
+  href: string;
+  checklyLocation: {
+    locationId: string;
+    locationName: string;
+  }[];
 }
 
 export async function buildLaurelJobMessage(data: {
