@@ -51,9 +51,9 @@ export class ChecklyRepository {
       });
 
       const query = `
-      SELECT j.id AS job_id,
-       c.locationId,
-       c.locationName
+      SELECT j.id AS "checklyJobId",
+       c."locationId",
+       c."locationName"
       FROM "ChecklyJob" j
       JOIN (
         VALUES ${locationData
@@ -62,16 +62,15 @@ export class ChecklyRepository {
               `('${loc.checklyJobId}', '${loc.locationId}', '${loc.locationName}')`
           )
           .join(", ")}
-      ) AS c(jobId, locationId, locationName)
-        ON j."jobId" = c.jobId;
+      ) AS c("checklyJobId", "locationId", "locationName")
+        ON j."jobId" = c."checklyJobId";
       `;
       if (locationData.length > 0) {
         const result: Prisma.ChecklyLocationCreateManyInput[] =
           await this.prisma.$queryRawUnsafe(query);
-        // await this.prisma.checklyLocation.createMany({
-        //   data: result,
-        // });
-        console.log("Checkly locations created:", result);
+        await this.prisma.checklyLocation.createMany({
+          data: result,
+        });
       }
       return true;
     } catch (error) {
@@ -106,23 +105,27 @@ export class ChecklyRepository {
       const existingJob = existingJobs.find((j) => j.jobId === job.jobId);
       if (existingJob) {
         if (
-          existingJob.title !== job.title ||
-          existingJob.department !== job.department ||
-          existingJob.location !== job.location ||
-          existingJob.employmentType !== job.employmentType ||
-          existingJob.workplaceType !== job.workplaceType ||
-          existingJob.href !== job.href ||
-          existingJob.checklyLocation.length !== job.checklyLocation.length
+          existingJob.title === job.title ||
+          existingJob.department === job.department ||
+          existingJob.location === job.location ||
+          existingJob.employmentType === job.employmentType ||
+          existingJob.workplaceType === job.workplaceType ||
+          existingJob.href === job.href ||
+          existingJob.checklyLocation.length === job.checklyLocation.length
         ) {
           for (const loc of job.checklyLocation) {
             const locExists = existingJob.checklyLocation.find(
-              (l) => l.locationId === loc.locationId
+              (l) =>
+                l.locationId === loc.locationId &&
+                l.locationName === loc.locationName
             );
             if (!locExists) {
               updateJobs.push({ id: existingJob.id, ...job });
               break;
             }
           }
+        } else {
+          updateJobs.push({ id: existingJob.id, ...job });
         }
       } else {
         newJobs.push(job);

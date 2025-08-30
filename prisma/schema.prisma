@@ -105,7 +105,7 @@ model ChecklyJob {
 
 model ChecklyLocation {
   id          String   @id @default(uuid())
-  locationId  String   @unique
+  locationId  String   
   locationName String
   checklyJob  ChecklyJob @relation(fields: [checklyJobId], references: [id], onDelete: Cascade)
   checklyJobId String

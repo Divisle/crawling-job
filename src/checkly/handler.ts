@@ -1,6 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ChecklyRepository } from "./database";
-import { AshbyhqPostApiPayload, ChecklyJobInterface } from "../template";
+import {
+  AshbyhqPostApiPayload,
+  buildChecklyJobMessage,
+  ChecklyJobInterface,
+} from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
 
@@ -76,25 +80,28 @@ export class ChecklyJobHandler {
         id: undefined,
       })),
     ];
-    await this.db.deleteMany(listDeleteId);
-    await this.db.createMany(listCreateData);
+    if (listDeleteId.length !== 0) {
+      await this.db.deleteMany(listDeleteId);
+    }
+    if (listCreateData.length !== 0) {
+      await this.db.createMany(listCreateData);
+    }
     return filterData;
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.LaurelJobCreateInput[];
-    deleteJobs: Prisma.LaurelJobCreateInput[];
-    updateJobs: Prisma.LaurelJobCreateInput[];
+    newJobs: ChecklyJobInterface[];
+    deleteJobs: ChecklyJobInterface[];
+    updateJobs: ChecklyJobInterface[];
   }) {
-    // const blocks = await buildLaurelJobMessage(data);
+    const blocks = await buildChecklyJobMessage(data);
     try {
       await this.app.chat.postMessage({
         // channel: process.env.SLACK_TEST_CHANNEL_ID!,
         channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-        // blocks,
-        blocks: [],
+        blocks,
+        // blocks: [],
       });
-      console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -102,12 +109,9 @@ export class ChecklyJobHandler {
 
   static async run() {
     const handler = new ChecklyJobHandler();
-    console.log(handler);
     const data = await handler.scrapeJobs();
-    console.log(data);
     const filteredData = await handler.filterData(data);
-    console.log(filteredData);
-    // await handler.sendMessage(filteredData);
+    await handler.sendMessage(filteredData);
   }
 }
 
