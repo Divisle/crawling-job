@@ -30,7 +30,7 @@ export interface AshbyhqPostApiPayload {
     };
   };
 }
-export interface ChecklyJobInterface {
+export interface AshbyhqPostInterface {
   id?: string;
   jobId: string;
   title: string;
@@ -39,7 +39,7 @@ export interface ChecklyJobInterface {
   employmentType: string;
   workplaceType: string | null;
   href: string;
-  checklyLocation: {
+  ashbyhqLocation: {
     locationId: string;
     locationName: string;
   }[];
@@ -193,11 +193,15 @@ export async function buildCredoJobMessage(data: {
   return blocks;
 }
 
-export async function buildChecklyJobMessage(data: {
-  newJobs: ChecklyJobInterface[];
-  updateJobs: ChecklyJobInterface[];
-  deleteJobs: ChecklyJobInterface[];
-}) {
+export async function buildAshbyhqPostMessage(
+  data: {
+    newJobs: AshbyhqPostInterface[];
+    updateJobs: AshbyhqPostInterface[];
+    deleteJobs: AshbyhqPostInterface[];
+  },
+  web: string,
+  webUrl: string
+) {
   const blocks: any[] = [];
   const divider = {
     type: "divider",
@@ -206,7 +210,7 @@ export async function buildChecklyJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from *<www.checklyhq.com|Checkly>*`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from *<${webUrl}|${web}>*`,
     },
   });
   if (
@@ -255,8 +259,8 @@ export async function buildChecklyJobMessage(data: {
           {
             type: "mrkdwn",
             text: `*Location:* ${
-              job.checklyLocation.length > 0
-                ? job.checklyLocation.map((loc) => loc.locationName).join(", ")
+              job.ashbyhqLocation.length > 0
+                ? job.ashbyhqLocation.map((loc) => loc.locationName).join(", ")
                 : "No Location"
             }`,
           },
@@ -298,8 +302,8 @@ export async function buildChecklyJobMessage(data: {
           {
             type: "mrkdwn",
             text: `*Location:* ${
-              job.checklyLocation.length > 0
-                ? job.checklyLocation.map((loc) => loc.locationName).join(", ")
+              job.ashbyhqLocation.length > 0
+                ? job.ashbyhqLocation.map((loc) => loc.locationName).join(", ")
                 : "No Location"
             }`,
           },
@@ -341,8 +345,8 @@ export async function buildChecklyJobMessage(data: {
           {
             type: "mrkdwn",
             text: `*Location:* ${
-              job.checklyLocation.length > 0
-                ? job.checklyLocation.map((loc) => loc.locationName).join(", ")
+              job.ashbyhqLocation.length > 0
+                ? job.ashbyhqLocation.map((loc) => loc.locationName).join(", ")
                 : "No Location"
             }`,
           },

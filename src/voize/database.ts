@@ -1,30 +1,30 @@
-import { ChecklyJob, Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { AshbyhqPostInterface } from "@src/template";
 
-export class ChecklyRepository {
+export class VoizeRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async getChecklyJobs(): Promise<
-    Prisma.ChecklyJobGetPayload<{
+  async getVoizeJobs(): Promise<
+    Prisma.VoizeJobGetPayload<{
       include: {
-        checklyLocation: true;
+        voizeLocation: true;
       };
     }>[]
   > {
-    return this.prisma.checklyJob.findMany({
+    return this.prisma.voizeJob.findMany({
       include: {
-        checklyLocation: true,
+        voizeLocation: true,
       },
     });
   }
 
   async createMany(data: AshbyhqPostInterface[]): Promise<boolean> {
     try {
-      const jobData: Prisma.ChecklyJobCreateInput[] = [];
+      const jobData: Prisma.VoizeJobCreateInput[] = [];
       const locationData: {
         locationId: string;
         locationName: string;
-        checklyJobId: string;
+        voizeJobId: string;
       }[] = [];
 
       data.forEach((job) => {
@@ -41,47 +41,47 @@ export class ChecklyRepository {
           locationData.push({
             locationId: loc.locationId,
             locationName: loc.locationName,
-            checklyJobId: job.jobId,
+            voizeJobId: job.jobId,
           });
         });
       });
 
-      await this.prisma.checklyJob.createMany({
+      await this.prisma.voizeJob.createMany({
         data: jobData,
       });
 
       const query = `
-      SELECT j.id AS "checklyJobId",
+      SELECT j.id AS "voizeJobId",
        c."locationId",
        c."locationName"
-      FROM "ChecklyJob" j
+      FROM "VoizeJob" j
       JOIN (
         VALUES ${locationData
           .map(
             (loc) =>
-              `('${loc.checklyJobId}', '${loc.locationId}', '${loc.locationName}')`
+              `('${loc.voizeJobId}', '${loc.locationId}', '${loc.locationName}')`
           )
           .join(", ")}
-      ) AS c("checklyJobId", "locationId", "locationName")
-        ON j."jobId" = c."checklyJobId";
+      ) AS c("voizeJobId", "locationId", "locationName")
+        ON j."jobId" = c."voizeJobId";
       `;
       if (locationData.length > 0) {
-        const result: Prisma.ChecklyLocationCreateManyInput[] =
+        const result: Prisma.VoizeLocationCreateManyInput[] =
           await this.prisma.$queryRawUnsafe(query);
-        await this.prisma.checklyLocation.createMany({
+        await this.prisma.voizeLocation.createMany({
           data: result,
         });
       }
       return true;
     } catch (error) {
-      console.error("Error creating Checkly jobs:", error);
+      console.error("Error creating Voize jobs:", error);
       return false;
     }
   }
 
   async deleteMany(ids: string[]): Promise<boolean> {
     try {
-      await this.prisma.checklyJob.deleteMany({
+      await this.prisma.voizeJob.deleteMany({
         where: {
           id: {
             in: ids,
@@ -90,7 +90,7 @@ export class ChecklyRepository {
       });
       return true;
     } catch (error) {
-      console.error("Error deleting Checkly jobs:", error);
+      console.error("Error deleting Voize jobs:", error);
       return false;
     }
   }
@@ -99,7 +99,7 @@ export class ChecklyRepository {
     const deleteJobs: AshbyhqPostInterface[] = [];
     const updateJobs: AshbyhqPostInterface[] = [];
     const newJobs: AshbyhqPostInterface[] = [];
-    const existingJobs = await this.getChecklyJobs();
+    const existingJobs = await this.getVoizeJobs();
 
     data.forEach((job) => {
       const existingJob = existingJobs.find((j) => j.jobId === job.jobId);
@@ -111,10 +111,10 @@ export class ChecklyRepository {
           existingJob.employmentType === job.employmentType ||
           existingJob.workplaceType === job.workplaceType ||
           existingJob.href === job.href ||
-          existingJob.checklyLocation.length === job.ashbyhqLocation.length
+          existingJob.voizeLocation.length === job.ashbyhqLocation.length
         ) {
           for (const loc of job.ashbyhqLocation) {
-            const locExists = existingJob.checklyLocation.find(
+            const locExists = existingJob.voizeLocation.find(
               (l) =>
                 l.locationId === loc.locationId &&
                 l.locationName === loc.locationName
@@ -143,7 +143,7 @@ export class ChecklyRepository {
           employmentType: job.employmentType,
           workplaceType: job.workplaceType,
           href: job.href,
-          ashbyhqLocation: job.checklyLocation.map((loc) => ({
+          ashbyhqLocation: job.voizeLocation.map((loc) => ({
             locationId: loc.locationId,
             locationName: loc.locationName,
           })),

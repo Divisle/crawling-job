@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ChecklyRepository } from "./database";
+import { VoizeRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   buildAshbyhqPostMessage,
@@ -8,9 +8,9 @@ import {
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
 
-export class ChecklyJobHandler {
+export class VoizeJobHandler {
   private app: WebClient;
-  constructor(private db = new ChecklyRepository(new PrismaClient())) {
+  constructor(private db = new VoizeRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -26,7 +26,7 @@ export class ChecklyJobHandler {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "checkly",
+        organizationHostedJobsPageName: "voize",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -96,13 +96,13 @@ export class ChecklyJobHandler {
   }) {
     const blocks = await buildAshbyhqPostMessage(
       data,
-      "Checkly",
-      "https://www.checklyhq.com"
+      "Voize",
+      "https://en.voize.de/"
     );
     try {
       await this.app.chat.postMessage({
-        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
         blocks,
         // blocks: [],
       });
@@ -112,11 +112,11 @@ export class ChecklyJobHandler {
   }
 
   static async run() {
-    const handler = new ChecklyJobHandler();
+    const handler = new VoizeJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     await handler.sendMessage(filteredData);
   }
 }
 
-ChecklyJobHandler.run();
+VoizeJobHandler.run();
