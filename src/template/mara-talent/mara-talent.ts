@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 
-export function buildSafeJobMessage(data: {
-  newJobs: Prisma.SafeJobCreateInput[];
-  updateJobs: Prisma.SafeJobCreateInput[];
-  deleteJobs: Prisma.SafeJobCreateInput[];
+export function buildMaraTalentJobMessage(data: {
+  newJobs: Prisma.MaraTalentJobCreateInput[];
+  updateJobs: Prisma.MaraTalentJobCreateInput[];
+  deleteJobs: Prisma.MaraTalentJobCreateInput[];
 }) {
   const blocks: any[] = [];
   const divider = {
@@ -13,7 +13,7 @@ export function buildSafeJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://safe.security/|Safe Security>`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://www.maratalent.co.uk/|Mara Talent>`,
     },
   });
   if (
@@ -43,7 +43,7 @@ export function buildSafeJobMessage(data: {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${job.employmentType}\n*Department*: ${job.group} - ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Company*: ${job.company}`,
         },
       });
       blocks.push({
@@ -79,7 +79,7 @@ export function buildSafeJobMessage(data: {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${job.employmentType}\n*Department*: ${job.group} - ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Company*: ${job.company}`,
         },
       });
       blocks.push({
@@ -115,7 +115,7 @@ export function buildSafeJobMessage(data: {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${job.employmentType}\n*Department*: ${job.group} - ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Company*: ${job.company}`,
         },
       });
       blocks.push({

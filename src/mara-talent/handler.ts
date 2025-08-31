@@ -1,0 +1,107 @@
+import { Prisma, PrismaClient } from "@prisma/client";
+import { MaraTalentRepository } from "./database";
+import { buildMaraTalentJobMessage, buildSafeJobMessage } from "../template";
+import { WebClient } from "@slack/web-api";
+import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Options } from "selenium-webdriver/chrome";
+
+export class SafeJobHandler {
+  private driver: WebDriver;
+  private app: WebClient;
+  constructor(private db = new MaraTalentRepository(new PrismaClient())) {
+    if (!process.env.SLACK_BOT_TOKEN) {
+      console.log("SLACK_BOT_TOKEN is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+    const options = new Options();
+    options.addArguments("--headless");
+    options.addArguments("--no-sandbox");
+    options.addArguments("--disable-dev-shm-usage");
+    options.addArguments("--disable-gpu");
+    // options.addArguments("--disable-blink-features=AutomationControlled");
+    // options.addArguments("--disable-extensions");
+    // options.addArguments("--no-first-run");
+    // options.addArguments("--disable-default-apps");
+    options.addArguments(
+      "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+    // options.excludeSwitches("enable-automation");
+    // options.addArguments("--disable-web-security");
+    // options.addArguments("--allow-running-insecure-content");
+
+    this.driver = new Builder()
+      .forBrowser("chrome")
+      .setChromeOptions(options)
+      .build();
+  }
+
+  async scrapeJobs(): Promise<Prisma.MaraTalentJobCreateInput[]> {
+    await this.driver.get("https://www.maratalent.co.uk/jobs/");
+    const data: Prisma.MaraTalentJobCreateInput[] = [];
+    const listJobElements = await this.driver.findElements(
+      By.xpath("//div[@class='job_listings']//ul//a")
+    );
+    for (const jobElement of listJobElements) {
+      const title = await jobElement.findElement(By.xpath(".//h3")).getText();
+      const company = await jobElement
+        .findElement(By.xpath(".//strong"))
+        .getText();
+      const location = await jobElement
+        .findElement(By.xpath(".//div[@class='location']"))
+        .getText();
+      const href = await jobElement.getAttribute("href");
+      data.push({ title, company, location, href });
+    }
+    return data;
+  }
+
+  async filterData(data: Prisma.MaraTalentJobCreateInput[]) {
+    const filteredData = await this.db.compareData(data);
+    const listDeleteId = [
+      ...filteredData.deleteJobs.map((job) => job.id as string),
+      ...filteredData.updateJobs.map((job) => job.id as string),
+    ];
+    const listCreateData = [
+      ...filteredData.newJobs,
+      ...filteredData.updateJobs.map((job) => {
+        const { id, ...jobData } = job;
+        return jobData;
+      }),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listCreateData);
+    return filteredData;
+  }
+
+  async sendMessage(data: {
+    newJobs: Prisma.MaraTalentJobCreateInput[];
+    updateJobs: Prisma.MaraTalentJobCreateInput[];
+    deleteJobs: Prisma.MaraTalentJobCreateInput[];
+  }) {
+    const blocks = buildMaraTalentJobMessage(data);
+    await this.app.chat.postMessage({
+      // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      blocks,
+    });
+  }
+
+  async close() {
+    await this.driver.quit();
+  }
+
+  static async run() {
+    const handler = new SafeJobHandler();
+    const jobData = await handler.scrapeJobs();
+    const filteredData = await handler.filterData(jobData);
+    await handler.sendMessage(filteredData);
+    await handler.close();
+  }
+}
+
+SafeJobHandler.run();

@@ -183,3 +183,13 @@ model SafeJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model MaraTalentJob {
+  id          String   @id @default(uuid())
+  title       String
+  company    String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

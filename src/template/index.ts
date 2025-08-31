@@ -6,3 +6,4 @@ export * from "./pivotal";
 export * from "./farsight";
 export * from "./teleport";
 export * from "./safe";
+export * from "./mara-talent";
