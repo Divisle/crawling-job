@@ -13,7 +13,7 @@ export async function buildPivotalJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://pivotalpartners.io/jobs|Pivotal Partners>`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://pivotalpartners.io|Pivotal Partners>`,
     },
   });
   if (
