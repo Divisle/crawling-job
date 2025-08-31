@@ -61,21 +61,20 @@ export class AnomaloJobScraper {
     jobData: Prisma.MaterializeJobCreateInput[]
   ): Promise<DefaultJobMessageData> {
     const filterData = await this.db.compareData(jobData);
-    if (filterData.newJobs.length !== 0) {
-      await this.db.createMany(filterData.newJobs);
-    }
-    if (filterData.updateJobs.length !== 0) {
-      await this.db.deleteMany(filterData.updateJobs.map((job) => job.id));
-      await this.db.createMany(
-        filterData.updateJobs.map((job) => {
-          const { id, ...rest } = job;
-          return rest;
-        })
-      );
-    }
-    if (filterData.deleteJobs.length !== 0) {
-      await this.db.deleteMany(filterData.deleteJobs.map((job) => job.id));
-    }
+    const listDeleteId = [
+      ...filterData.deleteJobs.map((job) => job.id!),
+      ...filterData.updateJobs.map((job) => job.id!),
+    ];
+    const listNewData = [
+      ...filterData.newJobs,
+      ...filterData.updateJobs.map((job) => {
+        const { id, ...rest } = job;
+        return rest;
+      }),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listNewData);
+
     const messageData = {
       newJobs: filterData.newJobs.map((e) => {
         return {
