@@ -8,3 +8,4 @@ export * from "./teleport";
 export * from "./safe";
 export * from "./mara-talent";
 export * from "./materialize";
+export * from "./legion";

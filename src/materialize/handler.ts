@@ -5,7 +5,7 @@ import { MaterializeJobRepository } from "./database";
 import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
 import { WebClient } from "@slack/web-api";
 
-export class AnomaloJobScraper {
+export class MaterializeJobScraper {
   private driver: WebDriver;
   private app: WebClient;
   constructor(private db = new MaterializeJobRepository(new PrismaClient())) {
@@ -118,7 +118,7 @@ export class AnomaloJobScraper {
   }
 
   static async run() {
-    const scraper = new AnomaloJobScraper();
+    const scraper = new MaterializeJobScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
     await scraper.sendMessage(filteredData);
@@ -130,4 +130,4 @@ export class AnomaloJobScraper {
   }
 }
 
-AnomaloJobScraper.run();
+MaterializeJobScraper.run();
