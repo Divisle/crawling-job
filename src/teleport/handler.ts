@@ -1,12 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { TeleportJobRepository } from "./database";
-import {
-  // buildTeleportJobsMessage,
-  TeleportApiPayload,
-  // TeleportJobInterface,
-} from "../template";
+import { buildTeleportJobMessage } from "../template";
 import { WebClient } from "@slack/web-api";
-import axios from "axios";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 
@@ -45,12 +40,12 @@ export class TeleportJobHandler {
       .build();
   }
 
-  async scrapeJobs(): Promise<any[]> {
+  async scrapeJobs(): Promise<Prisma.TeleportJobCreateInput[]> {
     await this.driver.get("https://goteleport.com/careers/#jobs");
     const listTeamElements = await this.driver.findElements(
       By.xpath("//li[contains(@class, 'sc-45b5350e-1')]")
     );
-    console.log({ listTeamElements });
+    const data: Prisma.TeleportJobCreateInput[] = [];
     for (const teamElement of listTeamElements) {
       const teamName = await teamElement.findElement(By.css("h3")).getText();
       const listJobs = await teamElement.findElements(By.css("ul li"));
@@ -65,15 +60,42 @@ export class TeleportJobHandler {
         const type = await jobElement
           .findElement(By.xpath(".//p[contains(@class, 'jYstAY')]"))
           .getAttribute("innerText");
-        console.log({ teamName, title, href, location, type });
+        data.push({ teamName, title, href, location, type });
       }
     }
-    return [];
+    return data;
   }
 
-  async filterData() {}
+  async filterData(data: Prisma.TeleportJobCreateInput[]) {
+    const filteredData = await this.db.compareData(data);
+    const listDeleteId = [
+      ...filteredData.deleteJobs.map((job) => job.id as string),
+      ...filteredData.updateJobs.map((job) => job.id as string),
+    ];
+    const listCreateData = [
+      ...filteredData.newJobs,
+      ...filteredData.updateJobs.map((job) => {
+        const { id, ...jobData } = job;
+        return jobData;
+      }),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listCreateData);
+    return filteredData;
+  }
 
-  async sendMessage() {}
+  async sendMessage(data: {
+    newJobs: Prisma.TeleportJobCreateInput[];
+    updateJobs: Prisma.TeleportJobCreateInput[];
+    deleteJobs: Prisma.TeleportJobCreateInput[];
+  }) {
+    const blocks = buildTeleportJobMessage(data);
+    await this.app.chat.postMessage({
+      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      blocks,
+    });
+  }
 
   async close() {
     await this.driver.quit();
@@ -81,7 +103,9 @@ export class TeleportJobHandler {
 
   static async run() {
     const handler = new TeleportJobHandler();
-    await handler.scrapeJobs();
+    const jobData = await handler.scrapeJobs();
+    const filteredData = await handler.filterData(jobData);
+    await handler.sendMessage(filteredData);
     await handler.close();
   }
 }
