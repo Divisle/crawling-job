@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { buildLoopJobMessage, LoopApiPayLoad } from "../template";
+import { buildSeeChangeMessage, SeeChangeApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
-import { LoopRepository } from "./database";
-export class LoopJobHandler {
+import { SeeChangeRepository } from "./database";
+export class SeeChangeJobHandler {
   private app: WebClient;
-  constructor(private db = new LoopRepository(new PrismaClient())) {
+  constructor(private db = new SeeChangeRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -17,25 +17,22 @@ export class LoopJobHandler {
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
-  async scrapeJobs(): Promise<Prisma.LoopJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SeeChangeJobCreateInput[]> {
     try {
-      const jobData: Prisma.LoopJobCreateInput[] = [];
+      const jobData: Prisma.SeeChangeJobCreateInput[] = [];
       const response: {
-        data: LoopApiPayLoad;
-      } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/loop/departments"
-      );
-      for (const department of response.data.departments) {
-        if (department.jobs.length === 0) continue;
-        for (const job of department.jobs) {
-          jobData.push({
-            jobId: job.id.toString(),
-            title: job.title,
-            location: job.location.name,
-            department: department.name,
-            href: job.absolute_url,
-          });
-        }
+        data: SeeChangeApiPayload;
+      } = await axios.get("https://seechange.bamboohr.com/careers/list");
+      for (const job of response.data.result) {
+        jobData.push({
+          jobId: job.id,
+          title: job.jobOpeningName,
+          city: job.location.city,
+          department: job.departmentLabel,
+          employmentType: job.employmentStatusLabel,
+          state: job.location.state,
+          href: `https://seechange.com/careers/${job.id}`,
+        });
       }
       return jobData;
     } catch (error) {
@@ -44,7 +41,7 @@ export class LoopJobHandler {
     }
   }
 
-  async filterData(data: Prisma.LoopJobCreateInput[]) {
+  async filterData(data: Prisma.SeeChangeJobCreateInput[]) {
     const filteredData = await this.db.compareData(data);
     const listDeleteId = [
       ...filteredData.deleteJobs.map((job) => job.id as string),
@@ -63,11 +60,11 @@ export class LoopJobHandler {
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.LoopJobCreateInput[];
-    updateJobs: Prisma.LoopJobCreateInput[];
-    deleteJobs: Prisma.LoopJobCreateInput[];
+    newJobs: Prisma.SeeChangeJobCreateInput[];
+    updateJobs: Prisma.SeeChangeJobCreateInput[];
+    deleteJobs: Prisma.SeeChangeJobCreateInput[];
   }) {
-    const blocks = buildLoopJobMessage(data);
+    const blocks = buildSeeChangeMessage(data);
     await this.app.chat.postMessage({
       channel: process.env.SLACK_FIRST_CHANNEL_ID!,
       // channel: process.env.SLACK_TEST_CHANNEL_ID!,
@@ -75,11 +72,10 @@ export class LoopJobHandler {
     });
   }
   static async run() {
-    const handler = new LoopJobHandler();
+    const handler = new SeeChangeJobHandler();
     const jobs = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobs);
     await handler.sendMessage(filteredData);
-    // console.log("Scraped jobs:", jobs);
   }
 }
-LoopJobHandler.run();
+SeeChangeJobHandler.run();

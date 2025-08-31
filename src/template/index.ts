@@ -9,3 +9,4 @@ export * from "./safe";
 export * from "./mara-talent";
 export * from "./loop";
 export * from "./legion";
+export * from "./seechange";
