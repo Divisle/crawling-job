@@ -37,24 +37,35 @@ export class AnomaloJobRepository {
     }
   }
 
-  async compareData(datas: Prisma.AnomaloJobCreateInput[]) {
+  async compareData(data: Prisma.AnomaloJobCreateInput[]) {
     const oldJobData = await this.findAll();
-    const deleteJobs = oldJobData.filter((oldJob) =>
-      datas.every((newJob) => newJob.href !== oldJob.href)
-    );
-    const newJobs = datas.filter((newJob) =>
-      oldJobData.every((oldJob) => oldJob.href !== newJob.href)
-    );
-    const updateJobs = oldJobData.filter((oldJob) =>
-      datas.some(
-        (newJob) =>
-          newJob.href === oldJob.href ||
-          newJob.title !== oldJob.title ||
-          newJob.location !== oldJob.location ||
-          newJob.department !== oldJob.department
-      )
-    );
-
+    const newJobs: Prisma.AnomaloJobCreateInput[] = [];
+    const updateJobs: Prisma.AnomaloJobCreateInput[] = [];
+    const deleteJobs: Prisma.AnomaloJobCreateInput[] = [];
+    oldJobData.forEach((oldJob) => {
+      if (data.every((newJob) => newJob.href !== oldJob.href)) {
+        deleteJobs.push(oldJob);
+      }
+    });
+    data.forEach((newJob) => {
+      const existingJob = oldJobData.find(
+        (oldJob) => oldJob.href === newJob.href
+      );
+      if (existingJob) {
+        if (
+          existingJob.title !== newJob.title ||
+          existingJob.location !== newJob.location ||
+          existingJob.department !== newJob.department
+        ) {
+          updateJobs.push({
+            id: existingJob.id,
+            ...newJob,
+          });
+        }
+      } else {
+        newJobs.push(newJob);
+      }
+    });
     return { deleteJobs, newJobs, updateJobs };
   }
 }

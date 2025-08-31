@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
-import { AnomaloJobRepository } from "./database";
+import { MaterializeJobRepository } from "./database";
 import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
 import { WebClient } from "@slack/web-api";
 
 export class AnomaloJobScraper {
   private driver: WebDriver;
   private app: WebClient;
-  constructor(private db = new AnomaloJobRepository(new PrismaClient())) {
+  constructor(private db = new MaterializeJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -30,49 +30,52 @@ export class AnomaloJobScraper {
       .build();
   }
 
-  async scrapeJobs(): Promise<Prisma.AnomaloJobCreateInput[]> {
-    await this.driver.get("https://www.anomalo.com/careers/");
-    const jobFeedWrapper = await this.driver.findElement(
-      By.className("job-feed-wrapper")
+  async scrapeJobs(): Promise<Prisma.MaterializeJobCreateInput[]> {
+    await this.driver.get("https://materialize.com/careers/");
+    const departmentElements = await this.driver.findElements(
+      By.xpath("//div[@class='svelte-z5mc0o']")
     );
-    const jobLinks = await jobFeedWrapper.findElements(By.xpath(".//a"));
-    const jobData: Prisma.AnomaloJobCreateInput[] = [];
-    for (const link of jobLinks) {
-      const href = await link.getAttribute("href");
-      const jobTitle = await link.findElement(By.className("single-job-title"));
-      const jobTitleText = await jobTitle.getText();
-      const jobLocation = await link.findElement(By.className("location"));
-      const jobLocationText = await jobLocation.getText();
-      const jobDepartment = await link.findElement(By.className("department"));
-      const jobDepartmentText = await jobDepartment.getText();
-      jobData.push({
-        title: jobTitleText,
-        location: jobLocationText,
-        department: jobDepartmentText,
-        href: href,
-      });
+    const jobData: Prisma.MaterializeJobCreateInput[] = [];
+    for (const departmentElement of departmentElements) {
+      const department = await departmentElement
+        .findElement(By.css("h3"))
+        .getText();
+      const jobElements = await departmentElement.findElements(By.css("a"));
+      for (const jobElement of jobElements) {
+        const href = await jobElement.getAttribute("href");
+        const jobContents = await jobElement.findElements(By.css("div p"));
+        const title = await jobContents[0].getText();
+        const location = await jobContents[1].getText();
+        jobData.push({
+          title,
+          location,
+          department,
+          href,
+        });
+      }
     }
     return jobData;
   }
 
   async filterData(
-    jobData: Prisma.AnomaloJobCreateInput[]
+    jobData: Prisma.MaterializeJobCreateInput[]
   ): Promise<DefaultJobMessageData> {
     const filterData = await this.db.compareData(jobData);
-    const listDeleteId = [
-      ...filterData.deleteJobs.map((job) => job.id!),
-      ...filterData.updateJobs.map((job) => job.id!),
-    ];
-    const listNewData = [
-      ...filterData.newJobs,
-      ...filterData.updateJobs.map((job) => {
-        const { id, ...rest } = job;
-        return rest;
-      }),
-    ];
-    await this.db.deleteMany(listDeleteId);
-    await this.db.createMany(listNewData);
-
+    if (filterData.newJobs.length !== 0) {
+      await this.db.createMany(filterData.newJobs);
+    }
+    if (filterData.updateJobs.length !== 0) {
+      await this.db.deleteMany(filterData.updateJobs.map((job) => job.id));
+      await this.db.createMany(
+        filterData.updateJobs.map((job) => {
+          const { id, ...rest } = job;
+          return rest;
+        })
+      );
+    }
+    if (filterData.deleteJobs.length !== 0) {
+      await this.db.deleteMany(filterData.deleteJobs.map((job) => job.id));
+    }
     const messageData = {
       newJobs: filterData.newJobs.map((e) => {
         return {
@@ -105,11 +108,12 @@ export class AnomaloJobScraper {
   async sendMessage(data: DefaultJobMessageData) {
     const blockMessage = buildDefaultJobMessage(
       data,
-      "Anomalo",
-      "https://www.anomalo.com"
+      "Materialize",
+      "https://materialize.com/"
     );
     await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
       blocks: blockMessage,
     });
   }
