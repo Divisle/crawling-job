@@ -1,0 +1,148 @@
+import { Prisma, PrismaClient } from "@prisma/client";
+import { SafeJobRepository } from "./database";
+import { buildSafeJobMessage } from "../template";
+import { WebClient } from "@slack/web-api";
+import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Options } from "selenium-webdriver/chrome";
+
+export class SafeJobHandler {
+  private driver: WebDriver;
+  private app: WebClient;
+  constructor(private db = new SafeJobRepository(new PrismaClient())) {
+    if (!process.env.SLACK_BOT_TOKEN) {
+      console.log("SLACK_BOT_TOKEN is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+    const options = new Options();
+    options.addArguments("--headless");
+    options.addArguments("--no-sandbox");
+    options.addArguments("--disable-dev-shm-usage");
+    options.addArguments("--disable-gpu");
+    // options.addArguments("--disable-blink-features=AutomationControlled");
+    // options.addArguments("--disable-extensions");
+    // options.addArguments("--no-first-run");
+    // options.addArguments("--disable-default-apps");
+    options.addArguments(
+      "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+    // options.excludeSwitches("enable-automation");
+    // options.addArguments("--disable-web-security");
+    // options.addArguments("--allow-running-insecure-content");
+
+    this.driver = new Builder()
+      .forBrowser("chrome")
+      .setChromeOptions(options)
+      .build();
+  }
+
+  async scrapeJobs(): Promise<Prisma.SafeJobCreateInput[]> {
+    await this.driver.get("https://jobs.lever.co/safe");
+    const listGroups = await this.driver.findElements(
+      By.xpath("//div[@class='postings-group']")
+    );
+    let index = 0;
+    const data: Prisma.SafeJobCreateInput[] = [];
+    let groupName = "";
+
+    while (true) {
+      const group = listGroups[index];
+      const checkGroup = await group.findElements(
+        By.xpath(".//div[@class='large-category-header']")
+      );
+      if (checkGroup.length !== 0) {
+        groupName = await checkGroup[0].getText();
+      }
+      const teamName = await group
+        .findElement(
+          By.xpath(".//div[contains(@class, 'posting-category-title')]")
+        )
+        .getText();
+      const jobElements = await group.findElements(
+        By.xpath(".//div[@class='posting']")
+      );
+      for (const jobElement of jobElements) {
+        const href = await jobElement
+          .findElement(By.css("a"))
+          .getAttribute("href");
+        const title = await jobElement.findElement(By.css("h5")).getText();
+        const workplaceType = (
+          await jobElement
+            .findElement(
+              By.xpath(".//span[contains(@class, 'workplaceTypes')]")
+            )
+            .getText()
+        ).replace(" — ", "");
+        const employmentType = await jobElement
+          .findElement(By.xpath(".//span[contains(@class, 'commitment')]"))
+          .getText();
+        const location = await jobElement
+          .findElement(By.xpath(".//span[contains(@class, 'location')]"))
+          .getText();
+        data.push({
+          group: groupName,
+          department: teamName,
+          title,
+          href,
+          location,
+          workplaceType,
+          employmentType,
+        });
+      }
+      index++;
+      if (index >= listGroups.length) {
+        break;
+      }
+    }
+    return data;
+  }
+
+  async filterData(data: Prisma.SafeJobCreateInput[]) {
+    const filteredData = await this.db.compareData(data);
+    const listDeleteId = [
+      ...filteredData.deleteJobs.map((job) => job.id as string),
+      ...filteredData.updateJobs.map((job) => job.id as string),
+    ];
+    const listCreateData = [
+      ...filteredData.newJobs,
+      ...filteredData.updateJobs.map((job) => {
+        const { id, ...jobData } = job;
+        return jobData;
+      }),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listCreateData);
+    return filteredData;
+  }
+
+  async sendMessage(data: {
+    newJobs: Prisma.SafeJobCreateInput[];
+    updateJobs: Prisma.SafeJobCreateInput[];
+    deleteJobs: Prisma.SafeJobCreateInput[];
+  }) {
+    const blocks = buildSafeJobMessage(data);
+    await this.app.chat.postMessage({
+      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      blocks,
+    });
+  }
+
+  async close() {
+    await this.driver.quit();
+  }
+
+  static async run() {
+    const handler = new SafeJobHandler();
+    const jobData = await handler.scrapeJobs();
+    const filteredData = await handler.filterData(jobData);
+    await handler.sendMessage(filteredData);
+    await handler.close();
+  }
+}
+
+SafeJobHandler.run();
