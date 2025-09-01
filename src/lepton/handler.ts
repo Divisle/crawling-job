@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LeptonJobRepository } from "./database";
 import { WebClient } from "@slack/web-api";
-import { buildPivotalJobMessage, LeptonApiPayload } from "../template";
+import { buildLeptonJobMessage, LeptonApiPayload } from "../template";
 import axios from "axios";
 export class LeptonJobScraper {
   private app: WebClient;
@@ -86,11 +86,11 @@ export class LeptonJobScraper {
     deleteJobs: Prisma.LeptonCreateInput[];
     updateJobs: Prisma.LeptonCreateInput[];
   }) {
-    const blocks = await buildPivotalJobMessage(messageData);
+    const blocks = await buildLeptonJobMessage(messageData);
     try {
       await this.app.chat.postMessage({
-        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
         blocks,
       });
       console.log("Message sent successfully");
