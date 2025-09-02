@@ -1,74 +1,9 @@
 import { Prisma } from "@prisma/client";
 
-export interface RecruitmentApiPayload {
-  result: {
-    status: number;
-    page: string;
-    data: {
-      config: {
-        dataset: {
-          collectionName: string;
-          sort: any[];
-          collection: string;
-          pageSize: number;
-          lowercase: boolean;
-          seoV2: boolean;
-          filter: any;
-        };
-      };
-      dynamicUrl: string;
-      items: {
-        location: {
-          subdivisions: any[];
-          city: string;
-          location: any;
-          countryFullname: string;
-          streetAddress: {
-            number: string;
-            name: string;
-            apt: string;
-            formattedAddressLine: string;
-          };
-          formatted: string; // Location
-          country: string;
-          subdivision: string;
-        };
-        _id: string;
-        _owner: string;
-        jobDescription: string;
-        _createdDate: any;
-        "link-jobs-1-all": string;
-        _updatedDate: any;
-        salary: string; // salary range
-        "link-jobs-1-title": string;
-        jobId: string;
-        requirements: any;
-        publishedBy: string;
-        aboutUs: any;
-        title: string;
-      }[];
-      schemas: any;
-      totalCount: number;
-      userDefinedFilter: any;
-    };
-    message: string;
-    redirectUrl: string;
-  };
-}
-
-export interface RecruitmentTokenPayload {
-  hs: any;
-  visitorId: string;
-  svSession: string;
-  ctToken: string;
-  mediaAuthToken: string;
-  apps: any;
-}
-
-export function buildRecruitmentJobMessage(data: {
-  newJobs: Prisma.RecruitmentJobCreateInput[];
-  updateJobs: Prisma.RecruitmentJobCreateInput[];
-  deleteJobs: Prisma.RecruitmentJobCreateInput[];
+export function buildCardinalopsJobMessage(data: {
+  newJobs: Prisma.CardinalopsJobCreateInput[];
+  updateJobs: Prisma.CardinalopsJobCreateInput[];
+  deleteJobs: Prisma.CardinalopsJobCreateInput[];
 }) {
   const blocks: any[] = [];
   const divider = {
@@ -78,7 +13,7 @@ export function buildRecruitmentJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://www.recruitmentpeople.io/|Recruitment People>`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://cardinalops.com/|CardinalOps>`,
     },
   });
   if (
@@ -108,7 +43,7 @@ export function buildRecruitmentJobMessage(data: {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Salary*: ${job.salary}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
@@ -118,11 +53,11 @@ export function buildRecruitmentJobMessage(data: {
             type: "image",
             image_url:
               "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
+            alt_text: "Meta",
           },
           {
             type: "mrkdwn",
-            text: `${job.location}`,
+            text: job.meta,
           },
         ],
       });
@@ -139,12 +74,12 @@ export function buildRecruitmentJobMessage(data: {
         emoji: true,
       },
     });
-    data.newJobs.forEach((job) => {
+    data.updateJobs.forEach((job) => {
       blocks.push({
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Salary*: ${job.salary}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
@@ -154,11 +89,11 @@ export function buildRecruitmentJobMessage(data: {
             type: "image",
             image_url:
               "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
+            alt_text: "Meta",
           },
           {
             type: "mrkdwn",
-            text: `${job.location}`,
+            text: job.meta,
           },
         ],
       });
@@ -180,7 +115,7 @@ export function buildRecruitmentJobMessage(data: {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Salary*: ${job.salary}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
         },
       });
       blocks.push({
@@ -190,11 +125,11 @@ export function buildRecruitmentJobMessage(data: {
             type: "image",
             image_url:
               "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
+            alt_text: "Meta",
           },
           {
             type: "mrkdwn",
-            text: `${job.location}`,
+            text: job.meta,
           },
         ],
       });

@@ -290,3 +290,13 @@ model WebaiJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model CardinalopsJob {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  meta        String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
