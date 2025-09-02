@@ -268,3 +268,13 @@ model RecruitmentJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model OperantaiJob {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
