@@ -26,11 +26,15 @@ export interface AshbyhqApiPayload {
   ];
 }
 
-export async function buildLaurelJobMessage(data: {
-  newJobs: Prisma.LaurelJobCreateInput[];
-  updateJobs: Prisma.LaurelJobUpdateInput[];
-  deleteJobs: Prisma.LaurelJobCreateInput[];
-}) {
+export async function buildAshbyhqMessage(
+  data: {
+    newJobs: Prisma.LaurelJobCreateInput[];
+    updateJobs: Prisma.WebaiJobUpdateInput[];
+    deleteJobs: Prisma.WebaiJobCreateInput[];
+  },
+  web: string,
+  webUrl: string
+) {
   const blocks: any[] = [];
   const divider = {
     type: "divider",
@@ -39,7 +43,7 @@ export async function buildLaurelJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from *<https://www.laurel.ai/|Laurel>*`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from *<${webUrl}|${web}>*`,
     },
   });
   if (

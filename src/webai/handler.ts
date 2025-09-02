@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LaurelRepository } from "./database";
+import { WebaiRepository } from "./database";
 import { buildAshbyhqMessage, AshbyhqApiPayload } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
-export class LaurelJobHandler {
+export class WebaiJobHandler {
   private app: WebClient;
-  constructor(private db = new LaurelRepository(new PrismaClient())) {
+  constructor(private db = new WebaiRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -17,14 +17,14 @@ export class LaurelJobHandler {
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
-  async scrapeJobs(): Promise<Prisma.LaurelJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.WebaiJobCreateInput[]> {
     try {
       const response: {
         data: AshbyhqApiPayload;
       } = await axios.get(
-        "https://api.ashbyhq.com/posting-api/job-board/Laurel"
+        "https://api.ashbyhq.com/posting-api/job-board/Webai"
       );
-      const data: Prisma.LaurelJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.WebaiJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           jobId: job.id,
           title: job.title,
@@ -41,10 +41,10 @@ export class LaurelJobHandler {
     }
   }
 
-  async filterData(jobData: Prisma.LaurelJobCreateInput[]): Promise<{
-    newJobs: Prisma.LaurelJobCreateInput[];
-    deleteJobs: Prisma.LaurelJobCreateInput[];
-    updateJobs: Prisma.LaurelJobCreateInput[];
+  async filterData(jobData: Prisma.WebaiJobCreateInput[]): Promise<{
+    newJobs: Prisma.WebaiJobCreateInput[];
+    deleteJobs: Prisma.WebaiJobCreateInput[];
+    updateJobs: Prisma.WebaiJobCreateInput[];
   }> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -64,15 +64,11 @@ export class LaurelJobHandler {
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.LaurelJobCreateInput[];
-    deleteJobs: Prisma.LaurelJobCreateInput[];
-    updateJobs: Prisma.LaurelJobCreateInput[];
+    newJobs: Prisma.WebaiJobCreateInput[];
+    deleteJobs: Prisma.WebaiJobCreateInput[];
+    updateJobs: Prisma.WebaiJobCreateInput[];
   }) {
-    const blocks = await buildAshbyhqMessage(
-      data,
-      "Laurel",
-      "https://www.laurel.ai/"
-    );
+    const blocks = await buildAshbyhqMessage(data, "Webai", "http://webai.com");
     try {
       await this.app.chat.postMessage({
         // channel: process.env.SLACK_TEST_CHANNEL_ID!,
@@ -86,11 +82,11 @@ export class LaurelJobHandler {
   }
 
   static async run() {
-    const handler = new LaurelJobHandler();
+    const handler = new WebaiJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     await handler.sendMessage(filteredData);
   }
 }
 
-LaurelJobHandler.run();
+WebaiJobHandler.run();
