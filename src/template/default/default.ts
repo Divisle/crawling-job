@@ -1,7 +1,7 @@
 export interface DefaultJob {
   title: string;
   location: string;
-  department: string;
+  department?: string | null;
   href: string;
 }
 
@@ -54,7 +54,9 @@ export function buildDefaultJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${
+            job.department ? job.department : "No department provided"
+          }`,
         },
       });
       blocks.push({
@@ -90,7 +92,9 @@ export function buildDefaultJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${
+            job.department ? job.department : "No department provided"
+          }`,
         },
       });
       blocks.push({
@@ -126,7 +130,9 @@ export function buildDefaultJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Department*: ${job.department}`,
+          text: `*<${job.href}|${job.title}>*\n*Department*: ${
+            job.department ? job.department : "No department provided"
+          }`,
         },
       });
       blocks.push({

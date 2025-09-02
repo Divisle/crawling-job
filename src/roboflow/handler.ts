@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
-import { CardinalopsJobRepository } from "./database";
-import { buildCardinalopsJobMessage } from "../template";
+import { RoboFlowJobRepository } from "./database";
+import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
 import { WebClient } from "@slack/web-api";
 
-export class CardinalopsJobScraper {
+export class RoboFlowJobScraper {
   private driver: WebDriver;
   private app: WebClient;
-  constructor(private db = new CardinalopsJobRepository(new PrismaClient())) {
+  constructor(private db = new RoboFlowJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -23,55 +23,38 @@ export class CardinalopsJobScraper {
     options.addArguments("--no-sandbox");
     options.addArguments("--disable-dev-shm-usage");
     options.addArguments("--disable-gpu");
-    options.addArguments("--disable-blink-features=AutomationControlled");
-    options.addArguments("--disable-extensions");
-    options.addArguments(
-      "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    );
-    options.excludeSwitches("enable-automation");
-    options.addArguments("--disable-web-security");
+
     this.driver = new Builder()
       .forBrowser("chrome")
       .setChromeOptions(options)
       .build();
   }
 
-  async scrapeJobs(): Promise<Prisma.CardinalopsJobCreateInput[]> {
-    await this.driver.get("https://cardinalops.com/careers");
-    await this.driver.sleep(7000);
-    const jobData: Prisma.CardinalopsJobCreateInput[] = [];
-    const departmentDivs = await this.driver.findElements(
-      By.xpath("//div[@id='d']//div[@class='comeet-g-r']")
+  async scrapeJobs(): Promise<Prisma.RoboFlowJobCreateInput[]> {
+    await this.driver.get("https://roboflow.com/careers");
+    const jobData: Prisma.RoboFlowJobCreateInput[] = [];
+    const listJobCard = await this.driver.findElements(
+      By.xpath("//a[@class='career-jobs-card w-inline-block']")
     );
-    for (const departmentDiv of departmentDivs) {
-      const department = await departmentDiv
-        .findElement(
-          By.xpath(".//div[@class='comeet-list comeet-group-name']//a")
-        )
+    for (const jobCard of listJobCard) {
+      const href = await jobCard.getAttribute("href");
+      const title = await jobCard
+        .findElement(By.xpath(".//div[@class='career-jobs-role']"))
         .getText();
-      const listJobs = await departmentDiv.findElements(By.xpath(".//li//a"));
-      for (const job of listJobs) {
-        const data: Prisma.CardinalopsJobCreateInput = {
-          title: await job
-            .findElement(By.xpath(".//div[@class='comeet-position-name']"))
-            .getText(),
-          department,
-          meta: await job
-            .findElement(By.xpath(".//div[@class='comeet-position-meta']"))
-            .getText(),
-          href: await job.getAttribute("href"),
-        };
-        jobData.push(data);
-      }
+      const department = await jobCard
+        .findElements(By.xpath(".//div[@class='career-jobs-dept']"))
+        .then((els) => (els.length > 0 ? els[0].getText() : null));
+      const location = await jobCard
+        .findElement(By.xpath(".//div[@class='career-jobs-location']"))
+        .getText();
+      jobData.push({ href, title, location, department });
     }
     return jobData;
   }
 
-  async filterData(jobData: Prisma.CardinalopsJobCreateInput[]): Promise<{
-    newJobs: Prisma.CardinalopsJobCreateInput[];
-    updateJobs: Prisma.CardinalopsJobCreateInput[];
-    deleteJobs: Prisma.CardinalopsJobCreateInput[];
-  }> {
+  async filterData(
+    jobData: Prisma.RoboFlowJobCreateInput[]
+  ): Promise<DefaultJobMessageData> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
       ...filterData.deleteJobs.map((job) => job.id!),
@@ -91,7 +74,7 @@ export class CardinalopsJobScraper {
       newJobs: filterData.newJobs.map((e) => {
         return {
           title: e.title,
-          meta: e.meta,
+          location: e.location,
           department: e.department,
           href: e.href,
         };
@@ -99,7 +82,7 @@ export class CardinalopsJobScraper {
       deleteJobs: filterData.deleteJobs.map((e) => {
         return {
           title: e.title,
-          meta: e.meta,
+          location: e.location,
           department: e.department,
           href: e.href,
         };
@@ -107,7 +90,7 @@ export class CardinalopsJobScraper {
       updateJobs: filterData.updateJobs.map((e) => {
         return {
           title: e.title,
-          meta: e.meta,
+          location: e.location,
           department: e.department,
           href: e.href,
         };
@@ -116,12 +99,12 @@ export class CardinalopsJobScraper {
     return messageData;
   }
 
-  async sendMessage(data: {
-    newJobs: Prisma.CardinalopsJobCreateInput[];
-    updateJobs: Prisma.CardinalopsJobCreateInput[];
-    deleteJobs: Prisma.CardinalopsJobCreateInput[];
-  }) {
-    const blockMessage = buildCardinalopsJobMessage(data);
+  async sendMessage(data: DefaultJobMessageData) {
+    const blockMessage = buildDefaultJobMessage(
+      data,
+      "RoboFlow",
+      "https://roboflow.com/"
+    );
     await this.app.chat.postMessage({
       // channel: process.env.SLACK_TEST_CHANNEL_ID!,
       channel: process.env.SLACK_FIRST_CHANNEL_ID!,
@@ -130,7 +113,7 @@ export class CardinalopsJobScraper {
   }
 
   static async run() {
-    const scraper = new CardinalopsJobScraper();
+    const scraper = new RoboFlowJobScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
     await scraper.sendMessage(filteredData);
@@ -142,4 +125,4 @@ export class CardinalopsJobScraper {
   }
 }
 
-CardinalopsJobScraper.run();
+RoboFlowJobScraper.run();

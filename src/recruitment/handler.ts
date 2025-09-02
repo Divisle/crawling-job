@@ -81,8 +81,8 @@ export class RecruitmentJobHandler {
   }) {
     const blocks = buildRecruitmentJobMessage(data);
     await this.app.chat.postMessage({
-      // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
       blocks,
     });
   }
