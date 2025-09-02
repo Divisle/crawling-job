@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { SafeJobRepository } from "./database";
+import { DoxelJobRepository } from "./database";
 import { buildLeverJobMessage } from "../template";
 import { WebClient } from "@slack/web-api";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 
-export class SafeJobHandler {
+export class DoxelJobHandler {
   private driver: WebDriver;
   private app: WebClient;
-  constructor(private db = new SafeJobRepository(new PrismaClient())) {
+  constructor(private db = new DoxelJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -40,68 +40,46 @@ export class SafeJobHandler {
       .build();
   }
 
-  async scrapeJobs(): Promise<Prisma.SafeJobCreateInput[]> {
-    await this.driver.get("https://jobs.lever.co/safe");
-    const listGroups = await this.driver.findElements(
-      By.xpath("//div[@class='postings-group']")
+  async scrapeJobs(): Promise<Prisma.DoxelJobCreateInput[]> {
+    await this.driver.get("https://jobs.lever.co/doxel");
+    const data: Prisma.DoxelJobCreateInput[] = [];
+    const teamName = await this.driver
+      .findElement(
+        By.xpath(".//div[contains(@class, 'posting-category-title')]")
+      )
+      .getText();
+    const jobElements = await this.driver.findElements(
+      By.xpath(".//div[@class='posting']")
     );
-    let index = 0;
-    const data: Prisma.SafeJobCreateInput[] = [];
-    let groupName = "";
-
-    while (true) {
-      const group = listGroups[index];
-      const checkGroup = await group.findElements(
-        By.xpath(".//div[@class='large-category-header']")
-      );
-      if (checkGroup.length !== 0) {
-        groupName = await checkGroup[0].getText();
-      }
-      const teamName = await group
-        .findElement(
-          By.xpath(".//div[contains(@class, 'posting-category-title')]")
-        )
+    for (const jobElement of jobElements) {
+      const href = await jobElement
+        .findElement(By.css("a"))
+        .getAttribute("href");
+      const title = await jobElement.findElement(By.css("h5")).getText();
+      const workplaceType = (
+        await jobElement
+          .findElement(By.xpath(".//span[contains(@class, 'workplaceTypes')]"))
+          .getText()
+      ).replace(" — ", "");
+      const employmentType = await jobElement
+        .findElement(By.xpath(".//span[contains(@class, 'commitment')]"))
         .getText();
-      const jobElements = await group.findElements(
-        By.xpath(".//div[@class='posting']")
-      );
-      for (const jobElement of jobElements) {
-        const href = await jobElement
-          .findElement(By.css("a"))
-          .getAttribute("href");
-        const title = await jobElement.findElement(By.css("h5")).getText();
-        const workplaceType = (
-          await jobElement
-            .findElement(
-              By.xpath(".//span[contains(@class, 'workplaceTypes')]")
-            )
-            .getText()
-        ).replace(" — ", "");
-        const employmentType = await jobElement
-          .findElement(By.xpath(".//span[contains(@class, 'commitment')]"))
-          .getText();
-        const location = await jobElement
-          .findElement(By.xpath(".//span[contains(@class, 'location')]"))
-          .getText();
-        data.push({
-          group: groupName,
-          department: teamName,
-          title,
-          href,
-          location,
-          workplaceType,
-          employmentType,
-        });
-      }
-      index++;
-      if (index >= listGroups.length) {
-        break;
-      }
+      const location = await jobElement
+        .findElement(By.xpath(".//span[contains(@class, 'location')]"))
+        .getText();
+      data.push({
+        department: teamName,
+        title,
+        href,
+        location,
+        workplaceType,
+        employmentType,
+      });
     }
     return data;
   }
 
-  async filterData(data: Prisma.SafeJobCreateInput[]) {
+  async filterData(data: Prisma.DoxelJobCreateInput[]) {
     const filteredData = await this.db.compareData(data);
     const listDeleteId = [
       ...filteredData.deleteJobs.map((job) => job.id as string),
@@ -120,14 +98,14 @@ export class SafeJobHandler {
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.SafeJobCreateInput[];
-    updateJobs: Prisma.SafeJobCreateInput[];
-    deleteJobs: Prisma.SafeJobCreateInput[];
+    newJobs: Prisma.DoxelJobCreateInput[];
+    updateJobs: Prisma.DoxelJobCreateInput[];
+    deleteJobs: Prisma.DoxelJobCreateInput[];
   }) {
-    const blocks = buildLeverJobMessage(data, "Safe", "https://safe.security/");
+    const blocks = buildLeverJobMessage(data, "Doxel", "https://doxel.com/");
     await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+      // channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+      channel: process.env.SLACK_TEST_CHANNEL_ID!,
       blocks,
     });
   }
@@ -137,7 +115,7 @@ export class SafeJobHandler {
   }
 
   static async run() {
-    const handler = new SafeJobHandler();
+    const handler = new DoxelJobHandler();
     const jobData = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobData);
     await handler.sendMessage(filteredData);
@@ -145,4 +123,4 @@ export class SafeJobHandler {
   }
 }
 
-SafeJobHandler.run();
+DoxelJobHandler.run();

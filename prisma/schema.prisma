@@ -300,3 +300,15 @@ model CardinalopsJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model DoxelJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  department  String
+  workplaceType String
+  employmentType String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
