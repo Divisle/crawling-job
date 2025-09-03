@@ -5,11 +5,41 @@ export interface LeverJobInterface {
   group?: string | undefined;
   department: string;
   workplaceType: string;
-  employmentType: string;
+  employmentType?: string | null;
   href: string;
   createdAt?: string | Date | undefined;
   updatedAt?: string | Date | undefined;
 }
+
+export interface LeverApiPayload {
+  additionalPlain: string;
+  additional: string;
+  categories: {
+    commitment?: string | null;
+    department: string;
+    location: string;
+    team: string;
+    allLocations: string[];
+  };
+  createdAt: number;
+  descriptionPlain: string;
+  description: string;
+  id: string;
+  lists: {
+    text: string;
+    content: string;
+  }[];
+  text: string;
+  country: string;
+  workplaceType: string;
+  opening: string;
+  openingPlain: string;
+  descriptionBody: string;
+  descriptionBodyPlain: string;
+  hostedUrl: string;
+  applyUrl: string;
+}
+
 export function buildLeverJobMessage(
   data: {
     newJobs: LeverJobInterface[];
@@ -57,8 +87,12 @@ export function buildLeverJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${
-            job.employmentType
+          text: `*<${job.href}|${
+            job.title
+          }>*\n*Type*: ${job.workplaceType[0].toUpperCase()}${job.workplaceType.slice(
+            1
+          )}${
+            job.employmentType ? " - " + job.employmentType : ""
           }\n*Department*: ${job.group ? job.group + " - " : ""}${
             job.department
           }`,
@@ -97,8 +131,12 @@ export function buildLeverJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${
-            job.employmentType
+          text: `*<${job.href}|${
+            job.title
+          }>*\n*Type*: ${job.workplaceType[0].toUpperCase()}${job.workplaceType.slice(
+            1
+          )}${
+            job.employmentType ? " - " + job.employmentType : ""
           }\n*Department*: ${job.group ? job.group + " - " : ""}${
             job.department
           }`,
@@ -137,8 +175,12 @@ export function buildLeverJobMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*<${job.href}|${job.title}>*\n*Type*: ${job.workplaceType} - ${
-            job.employmentType
+          text: `*<${job.href}|${
+            job.title
+          }>*\n*Type*: ${job.workplaceType[0].toUpperCase()}${job.workplaceType.slice(
+            1
+          )}${
+            job.employmentType ? " - " + job.employmentType : ""
           }\n*Department*: ${job.group ? job.group + " - " : ""}${
             job.department
           }`,
