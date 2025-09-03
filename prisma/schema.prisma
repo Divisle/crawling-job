@@ -364,7 +364,7 @@ model FluidStackJob {
   href        String  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   fluidStackLocation FluidStackLocation[]
 }
 
@@ -374,6 +374,16 @@ model FluidStackLocation {
   locationName String
   fluidStackJob    FluidStackJob @relation(fields: [fluidStackJobId], references: [id], onDelete: Cascade)
   fluidStackJobId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AbnormalJob {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  location    String
+  href        String @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
