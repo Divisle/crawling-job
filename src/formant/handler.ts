@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
-import { RoboFlowJobRepository } from "./database";
+import { FormantJobRepository } from "./database";
 import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
 import { WebClient } from "@slack/web-api";
 
-export class RoboFlowJobScraper {
+export class FormantJobScraper {
   private driver: WebDriver;
   private app: WebClient;
-  constructor(private db = new RoboFlowJobRepository(new PrismaClient())) {
+  constructor(private db = new FormantJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -30,30 +30,31 @@ export class RoboFlowJobScraper {
       .build();
   }
 
-  async scrapeJobs(): Promise<Prisma.RoboFlowJobCreateInput[]> {
-    await this.driver.get("https://roboflow.com/careers");
-    const jobData: Prisma.RoboFlowJobCreateInput[] = [];
-    const listJobCard = await this.driver.findElements(
-      By.xpath("//a[@class='career-jobs-card w-inline-block']")
+  async scrapeJobs(): Promise<Prisma.FormantJobCreateInput[]> {
+    await this.driver.get("https://ats.rippling.com/formant-careers/jobs");
+    const jobData: Prisma.FormantJobCreateInput[] = [];
+    const jobElements = await this.driver.findElements(
+      By.xpath("//div[@class='css-oxhdrx']")
     );
-    for (const jobCard of listJobCard) {
-      const href = await jobCard.getAttribute("href");
-      const title = await jobCard
-        .findElement(By.xpath(".//div[@class='career-jobs-role']"))
+    for (const jobElement of jobElements) {
+      const href = await jobElement
+        .findElement(By.xpath(".//a[@class='css-1a75djn-Anchor e1tt4etm0']"))
+        .getAttribute("href");
+      const title = await jobElement
+        .findElement(By.xpath(".//a[@class='css-1a75djn-Anchor e1tt4etm0']"))
         .getText();
-      const department = await jobCard
-        .findElements(By.xpath(".//div[@class='career-jobs-dept']"))
-        .then((els) => (els.length > 0 ? els[0].getText() : null));
-      const location = await jobCard
-        .findElement(By.xpath(".//div[@class='career-jobs-location']"))
-        .getText();
-      jobData.push({ href, title, location, department });
+      const jobInformations = await jobElement.findElements(
+        By.xpath(".//p[@class='css-htb71u-Body1Element']")
+      );
+      const department = await jobInformations[0].getText();
+      const location = await jobInformations[1].getText();
+      jobData.push({ href, title, department, location });
     }
     return jobData;
   }
 
   async filterData(
-    jobData: Prisma.RoboFlowJobCreateInput[]
+    jobData: Prisma.FormantJobCreateInput[]
   ): Promise<DefaultJobMessageData> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -102,8 +103,8 @@ export class RoboFlowJobScraper {
   async sendMessage(data: DefaultJobMessageData) {
     const blockMessage = buildDefaultJobMessage(
       data,
-      "RoboFlow",
-      "https://roboflow.com/"
+      "Formant",
+      "https://formant.io/"
     );
     await this.app.chat.postMessage({
       // channel: process.env.SLACK_TEST_CHANNEL_ID!,
@@ -113,7 +114,7 @@ export class RoboFlowJobScraper {
   }
 
   static async run() {
-    const scraper = new RoboFlowJobScraper();
+    const scraper = new FormantJobScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
     await scraper.sendMessage(filteredData);
@@ -125,4 +126,4 @@ export class RoboFlowJobScraper {
   }
 }
 
-RoboFlowJobScraper.run();
+FormantJobScraper.run();
