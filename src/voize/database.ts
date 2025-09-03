@@ -105,12 +105,12 @@ export class VoizeRepository {
       const existingJob = existingJobs.find((j) => j.jobId === job.jobId);
       if (existingJob) {
         if (
-          existingJob.title === job.title ||
-          existingJob.department === job.department ||
-          existingJob.location === job.location ||
-          existingJob.employmentType === job.employmentType ||
-          existingJob.workplaceType === job.workplaceType ||
-          existingJob.href === job.href ||
+          existingJob.title === job.title &&
+          existingJob.department === job.department &&
+          existingJob.location === job.location &&
+          existingJob.employmentType === job.employmentType &&
+          existingJob.workplaceType === job.workplaceType &&
+          existingJob.href === job.href &&
           existingJob.voizeLocation.length === job.ashbyhqLocation.length
         ) {
           for (const loc of job.ashbyhqLocation) {

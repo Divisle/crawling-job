@@ -50,7 +50,7 @@ export class ChecklyJobHandler {
           location: posting.locationName,
           workplaceType: posting.workplaceType,
           employmentType: posting.employmentType,
-          href: `https://www.credo.ai/jobs?ashby_jid=${posting.id}`,
+          href: `https://jobs.ashbyhq.com/checkly/${posting.id}`,
           ashbyhqLocation: posting.secondaryLocations.map((loc) => ({
             locationId: loc.locationId,
             locationName: loc.locationName,
