@@ -1,0 +1,92 @@
+import { Prisma, PrismaClient } from "@prisma/client";
+import { IoJobRepository } from "./database";
+import {
+  buildAshbyhqMessage,
+  AshbyhqApiPayload,
+  IoApiPayload,
+} from "../template";
+import { WebClient } from "@slack/web-api";
+import axios from "axios";
+export class IoJobHandler {
+  private app: WebClient;
+  constructor(private db = new IoJobRepository(new PrismaClient())) {
+    if (!process.env.SLACK_BOT_TOKEN) {
+      console.log("SLACK_BOT_TOKEN is not defined");
+      return process.exit(1);
+    }
+    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+      return process.exit(1);
+    }
+    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+  }
+
+  async scrapeJobs(): Promise<Prisma.IoJobCreateInput[]> {
+    try {
+      const response: {
+        data: IoApiPayload[];
+      } = await axios.get("https://io.net/api/careers/jobs");
+      const data: Prisma.IoJobCreateInput[] = response.data.map((job) => ({
+        jobId: job.jobId,
+        title: job.title,
+        department: job.departmentName,
+        location: job.locationName,
+        employmentType: job.employmentType,
+        href: job.applyLink,
+      }));
+      return data;
+    } catch (error) {
+      console.error("Error scraping jobs:", error);
+      return [];
+    }
+  }
+
+  async filterData(jobData: Prisma.IoJobCreateInput[]): Promise<{
+    newJobs: Prisma.IoJobCreateInput[];
+    deleteJobs: Prisma.IoJobCreateInput[];
+    updateJobs: Prisma.IoJobCreateInput[];
+  }> {
+    const filterData = await this.db.compareData(jobData);
+    const listDeleteId = [
+      ...filterData.deleteJobs.map((job) => job.id!),
+      ...filterData.updateJobs.map((job) => job.id!),
+    ];
+    const listCreateData = [
+      ...filterData.newJobs,
+      ...filterData.updateJobs.map((job) => ({
+        ...job,
+        id: undefined,
+      })),
+    ];
+    await this.db.deleteMany(listDeleteId);
+    await this.db.createMany(listCreateData);
+    return filterData;
+  }
+
+  async sendMessage(data: {
+    newJobs: Prisma.IoJobCreateInput[];
+    deleteJobs: Prisma.IoJobCreateInput[];
+    updateJobs: Prisma.IoJobCreateInput[];
+  }) {
+    const blocks = await buildAshbyhqMessage(data, "Io", "https://io.net/");
+    try {
+      await this.app.chat.postMessage({
+        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
+        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
+        blocks,
+      });
+      console.log("Message sent successfully");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  }
+
+  static async run() {
+    const handler = new IoJobHandler();
+    const data = await handler.scrapeJobs();
+    const filteredData = await handler.filterData(data);
+    await handler.sendMessage(filteredData);
+  }
+}
+
+IoJobHandler.run();

@@ -445,3 +445,15 @@ model EndorLabsJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model IoJob {
+  id          String   @id @default(uuid())
+  jobId      String @unique
+  title       String
+  location    String
+  department  String
+  employmentType String
+  href        String  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
