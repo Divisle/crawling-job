@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LeptonJobRepository } from "./database";
 import { WebClient } from "@slack/web-api";
-import { buildLeptonJobMessage, LeptonApiPayload } from "../template";
+import { buildDefault1JobMessage, LeptonApiPayload } from "../template";
 import axios from "axios";
 export class LeptonJobScraper {
   private app: WebClient;
@@ -86,7 +86,11 @@ export class LeptonJobScraper {
     deleteJobs: Prisma.LeptonCreateInput[];
     updateJobs: Prisma.LeptonCreateInput[];
   }) {
-    const blocks = await buildLeptonJobMessage(messageData);
+    const blocks = await buildDefault1JobMessage(
+      messageData,
+      "Lepton",
+      "https://www.lepton.ai"
+    );
     try {
       await this.app.chat.postMessage({
         // channel: process.env.SLACK_TEST_CHANNEL_ID!,

@@ -332,3 +332,13 @@ model DashJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model LumosJob {
+  id          String   @id @default(uuid())
+  jobId      String @unique
+  title       String
+  location    String
+  href        String  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { MaraTalentRepository } from "./database";
-import { buildMaraTalentJobMessage, buildSafeJobMessage } from "../template";
+import { buildMaraTalentJobMessage } from "../template";
 import { WebClient } from "@slack/web-api";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";

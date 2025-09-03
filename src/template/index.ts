@@ -10,7 +10,7 @@ export * from "./mara-talent";
 export * from "./loop";
 export * from "./legion";
 export * from "./seechange";
-export * from "./lepton";
+export * from "./default1";
 export * from "./recruitment";
 export * from "./cardinalops";
 export * from "./dash";

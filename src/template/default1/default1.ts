@@ -1,5 +1,3 @@
-import { Prisma } from "@prisma/client";
-
 export interface LeptonApiPayload {
   total: number;
   jobPostings: [
@@ -15,11 +13,39 @@ export interface LeptonApiPayload {
   userAuthenticated: boolean;
 }
 
-export async function buildLeptonJobMessage(data: {
-  newJobs: Prisma.LeptonCreateInput[];
-  deleteJobs: Prisma.LeptonCreateInput[];
-  updateJobs: Prisma.LeptonCreateInput[];
-}) {
+export interface LumosApiPayload {
+  jobs: {
+    absolute_url: string;
+    data_compliance: any[];
+    internal_job_id: number;
+    location: {
+      name: string;
+    };
+    metadata: null;
+    id: number;
+    updated_at: string;
+    requisition_id: string;
+    title: string;
+    company_name: string;
+    first_published: string;
+  }[];
+}
+
+export interface Default1JobMessageData {
+  title: string;
+  location: string;
+  href: string;
+}
+
+export async function buildDefault1JobMessage(
+  data: {
+    newJobs: Default1JobMessageData[];
+    deleteJobs: Default1JobMessageData[];
+    updateJobs: Default1JobMessageData[];
+  },
+  web: string,
+  webUrl: string
+) {
   const blocks: any[] = [];
   const divider = {
     type: "divider",
@@ -28,7 +54,7 @@ export async function buildLeptonJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://www.lepton.ai|Lepton>`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <${webUrl}|${web}>`,
     },
   });
   if (
