@@ -5,10 +5,10 @@ import {
 } from "../template";
 import { WebClient } from "@slack/web-api";
 import axios from "axios";
-import { LoopRepository } from "./database";
-export class LoopJobHandler {
+import { RelyanceJobRepository } from "./database";
+export class RelyanceJobHandler {
   private app: WebClient;
-  constructor(private db = new LoopRepository(new PrismaClient())) {
+  constructor(private db = new RelyanceJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,13 +20,13 @@ export class LoopJobHandler {
     this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
-  async scrapeJobs(): Promise<Prisma.LoopJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.RelyanceJobCreateInput[]> {
     try {
-      const jobData: Prisma.LoopJobCreateInput[] = [];
+      const jobData: Prisma.RelyanceJobCreateInput[] = [];
       const response: {
         data: GreenhouseDepartmentApiPayLoad;
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/loop/departments"
+        "https://boards-api.greenhouse.io/v1/boards/relyance/departments"
       );
       for (const department of response.data.departments) {
         if (department.jobs.length === 0) continue;
@@ -47,7 +47,7 @@ export class LoopJobHandler {
     }
   }
 
-  async filterData(data: Prisma.LoopJobCreateInput[]) {
+  async filterData(data: Prisma.RelyanceJobCreateInput[]) {
     const filteredData = await this.db.compareData(data);
     const listDeleteId = [
       ...filteredData.deleteJobs.map((job) => job.id as string),
@@ -66,14 +66,14 @@ export class LoopJobHandler {
   }
 
   async sendMessage(data: {
-    newJobs: Prisma.LoopJobCreateInput[];
-    updateJobs: Prisma.LoopJobCreateInput[];
-    deleteJobs: Prisma.LoopJobCreateInput[];
+    newJobs: Prisma.RelyanceJobCreateInput[];
+    updateJobs: Prisma.RelyanceJobCreateInput[];
+    deleteJobs: Prisma.RelyanceJobCreateInput[];
   }) {
     const blocks = buildGreenhouseDepartmentMessage(
       data,
-      "Loop",
-      "https://www.loop.com/"
+      "Relyance",
+      "https://www.relyance.ai/"
     );
     await this.app.chat.postMessage({
       channel: process.env.SLACK_FIRST_CHANNEL_ID!,
@@ -82,11 +82,11 @@ export class LoopJobHandler {
     });
   }
   static async run() {
-    const handler = new LoopJobHandler();
+    const handler = new RelyanceJobHandler();
     const jobs = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobs);
     await handler.sendMessage(filteredData);
     // console.log("Scraped jobs:", jobs);
   }
 }
-LoopJobHandler.run();
+RelyanceJobHandler.run();

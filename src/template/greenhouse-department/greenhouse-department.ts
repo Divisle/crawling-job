@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export interface LoopApiPayLoad {
+export interface GreenhouseDepartmentApiPayLoad {
   departments: {
     id: string;
     name: string;
@@ -31,11 +31,15 @@ export interface LoopApiPayLoad {
   }[];
 }
 
-export function buildLoopJobMessage(data: {
-  newJobs: Prisma.LoopJobCreateInput[];
-  updateJobs: Prisma.LoopJobCreateInput[];
-  deleteJobs: Prisma.LoopJobCreateInput[];
-}) {
+export function buildGreenhouseDepartmentMessage(
+  data: {
+    newJobs: Prisma.LoopJobCreateInput[];
+    updateJobs: Prisma.LoopJobCreateInput[];
+    deleteJobs: Prisma.LoopJobCreateInput[];
+  },
+  web: string,
+  webUrl: string
+) {
   const blocks: any[] = [];
   const divider = {
     type: "divider",
@@ -44,7 +48,7 @@ export function buildLoopJobMessage(data: {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <https://www.loop.com/|Loop>`,
+      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from <${webUrl}|${web}>`,
     },
   });
   if (
