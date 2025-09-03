@@ -22,15 +22,30 @@ export interface AshbyhqApiPayload {
       applyUrl: string;
       descriptionHtml: string;
       descriptionPlain: string;
+      compensation?: null | {
+        compensationTierSummary?: string | null;
+        scrapeableCompensationSalarySummary?: string | null;
+        compensationTiers: any[];
+        summaryComponents: any[];
+      };
     }
   ];
 }
 
+export interface AshbyhqInterface {
+  title: string;
+  department: string;
+  location: string;
+  employmentType: string;
+  href: string;
+  compensation?: string | null;
+}
+
 export async function buildAshbyhqMessage(
   data: {
-    newJobs: Prisma.LaurelJobCreateInput[];
-    updateJobs: Prisma.WebaiJobUpdateInput[];
-    deleteJobs: Prisma.WebaiJobCreateInput[];
+    newJobs: AshbyhqInterface[];
+    updateJobs: AshbyhqInterface[];
+    deleteJobs: AshbyhqInterface[];
   },
   web: string,
   webUrl: string
