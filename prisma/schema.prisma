@@ -387,3 +387,15 @@ model AbnormalJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model VorlonJob {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  location    String
+  href        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([title, department, location])
+}
