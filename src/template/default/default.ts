@@ -11,6 +11,40 @@ export interface DefaultJobMessageData {
   updateJobs: DefaultJob[];
 }
 
+export interface PortApiPayload {
+  name: string;
+  department: string;
+  email: string;
+  location: {
+    name: string;
+    country: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    street_name: string;
+    arrival_instructions: string | null;
+    street_number: string;
+    timezone: string;
+    location_uid: string;
+    is_remote: true;
+  };
+  url_comeet_hosted_page: string;
+  url_recruit_hosted_page: string;
+  url_active_page: string;
+  employment_type: null;
+  experience_level: null;
+  uid: string;
+  internal_use_custom_id: null;
+  url_detected_page: null;
+  picture_url: null;
+  time_updated: string;
+  company_name: string;
+  is_internal: false;
+  linkedin_job_posting_id: string;
+  workplace_type: string;
+  position_url: string;
+}
+
 export function buildDefaultJobMessage(
   data: DefaultJobMessageData,
   company: string,

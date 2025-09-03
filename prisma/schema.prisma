@@ -425,3 +425,13 @@ model SysdigJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model PortJob {
+  id          String   @id @default(uuid())
+  title       String
+  department  String
+  location    String
+  href        String @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
