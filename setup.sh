@@ -24,7 +24,7 @@ echo "Choose a cron schedule:"
 echo "1) Every hour"
 echo "2) Daily at 9 AM"
 echo "3) Daily at midnight"
-echo "4) Every 6 hours"
+echo "4) Every 3 hours"
 echo "5) Custom schedule"
 echo ""
 read -p "Enter your choice (1-5): " choice
@@ -43,8 +43,8 @@ case $choice in
         SCHEDULE_DESC="daily at midnight"
         ;;
     4)
-        CRON_SCHEDULE="0 */6 * * *"
-        SCHEDULE_DESC="every 6 hours"
+        CRON_SCHEDULE="0 */3 * * *"
+        SCHEDULE_DESC="every 3 hours"
         ;;
     5)
         echo "Enter custom cron schedule (e.g., '0 9 * * *' for daily at 9 AM):"
