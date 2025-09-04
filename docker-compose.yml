@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  crawling-job:
+    build: .
+    container_name: crawling-job
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_FIRST_CHANNEL_ID=${SLACK_FIRST_CHANNEL_ID}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./logs:/var/log
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - crawling-network
+
+networks:
+  crawling-network:
+    driver: bridge
