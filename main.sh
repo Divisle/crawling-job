@@ -14,6 +14,17 @@ log() {
 
 log "Starting crawling job setup and execution..."
 
+# Kill any existing Chrome processes to prevent conflicts
+log "Cleaning up any existing Chrome processes..."
+pkill -f "chrome" || true
+pkill -f "chromium" || true
+sleep 2
+
+# Clean up any leftover Chrome user data directories
+log "Cleaning up Chrome user data directories..."
+rm -rf /tmp/.com.google.Chrome* 2>/dev/null || true
+rm -rf /tmp/chrome_* 2>/dev/null || true
+
 # 1. Check if nvm exists, if not download it
 if ! command -v nvm &> /dev/null && [ ! -s "$HOME/.nvm/nvm.sh" ]; then
     log "NVM not found. Installing NVM..."
@@ -54,5 +65,10 @@ yarn install
 # 5. Run the main TypeScript file
 log "Starting crawling job execution..."
 yarn ts-node main.ts
+
+# Clean up after execution
+log "Cleaning up Chrome processes after execution..."
+pkill -f "chrome" || true
+pkill -f "chromium" || true
 
 log "Crawling job completed successfully!"
