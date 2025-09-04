@@ -5,7 +5,7 @@ import { WebClient } from "@slack/web-api";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 
-export class SafeJobHandler {
+export class MaraTalentHandler {
   private driver: WebDriver;
   private app: WebClient;
   constructor(private db = new MaraTalentRepository(new PrismaClient())) {
