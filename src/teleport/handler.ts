@@ -105,5 +105,3 @@ export class TeleportJobHandler {
     await handler.close();
   }
 }
-
-TeleportJobHandler.run();

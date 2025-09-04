@@ -87,5 +87,3 @@ export class OmneaJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-OmneaJobHandler.run();

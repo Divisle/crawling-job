@@ -102,5 +102,3 @@ export class DashJobHandler {
     await handler.close();
   }
 }
-
-DashJobHandler.run();

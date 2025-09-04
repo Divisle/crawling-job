@@ -97,5 +97,3 @@ export class PortJobScraper {
     await scraper.sendMessage(filteredData);
   }
 }
-
-PortJobScraper.run();

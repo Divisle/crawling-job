@@ -71,5 +71,3 @@ export class FarSightJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-FarSightJobHandler.run();

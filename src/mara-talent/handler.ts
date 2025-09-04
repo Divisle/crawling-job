@@ -98,5 +98,3 @@ export class MaraTalentHandler {
     await handler.close();
   }
 }
-
-MaraTalentHandler.run();

@@ -125,5 +125,3 @@ export class MaterializeJobScraper {
     await this.driver.quit();
   }
 }
-
-MaterializeJobScraper.run();

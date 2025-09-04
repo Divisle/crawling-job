@@ -129,5 +129,3 @@ export class EnterpretJobScraper {
     await this.driver.quit();
   }
 }
-
-EnterpretJobScraper.run();

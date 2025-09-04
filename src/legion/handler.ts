@@ -122,5 +122,3 @@ export class LegionJobScraper {
     await this.driver.quit();
   }
 }
-
-LegionJobScraper.run();

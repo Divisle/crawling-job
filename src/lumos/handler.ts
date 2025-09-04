@@ -82,5 +82,3 @@ export class LumosJobScraper {
     await scraper.sendMessage(filteredData);
   }
 }
-
-LumosJobScraper.run();

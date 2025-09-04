@@ -124,5 +124,3 @@ export class HightouchJobScraper {
     await this.driver.quit();
   }
 }
-
-HightouchJobScraper.run();

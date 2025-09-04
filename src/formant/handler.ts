@@ -120,5 +120,3 @@ export class FormantJobScraper {
     await this.driver.quit();
   }
 }
-
-FormantJobScraper.run();

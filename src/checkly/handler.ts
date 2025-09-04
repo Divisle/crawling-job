@@ -111,5 +111,3 @@ export class ChecklyJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-ChecklyJobHandler.run();

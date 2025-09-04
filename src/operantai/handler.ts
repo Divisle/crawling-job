@@ -130,5 +130,3 @@ export class OperantaiJobScraper {
     await this.driver.quit();
   }
 }
-
-OperantaiJobScraper.run();

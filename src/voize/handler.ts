@@ -111,5 +111,3 @@ export class VoizeJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-VoizeJobHandler.run();

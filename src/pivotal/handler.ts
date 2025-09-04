@@ -115,5 +115,3 @@ export class PivotalJobScraper {
     await scraper.close();
   }
 }
-
-PivotalJobScraper.run();

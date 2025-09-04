@@ -72,4 +72,3 @@ export class SeeChangeJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-SeeChangeJobHandler.run();

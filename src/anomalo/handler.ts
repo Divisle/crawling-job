@@ -123,5 +123,3 @@ export class AnomaloJobScraper {
     await this.driver.quit();
   }
 }
-
-AnomaloJobScraper.run();

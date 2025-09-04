@@ -86,5 +86,3 @@ export class LaurelJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-LaurelJobHandler.run();

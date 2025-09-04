@@ -136,5 +136,3 @@ export class CardinalopsJobScraper {
     await this.driver.quit();
   }
 }
-
-CardinalopsJobScraper.run();

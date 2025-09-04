@@ -111,5 +111,3 @@ export class FluidStackJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-FluidStackJobHandler.run();

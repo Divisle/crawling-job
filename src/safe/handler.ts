@@ -48,7 +48,10 @@ export class SafeJobHandler {
     let index = 0;
     const data: Prisma.SafeJobCreateInput[] = [];
     let groupName = "";
-
+    if (listGroups.length === 0) {
+      console.log("No job postings found.");
+      return data;
+    }
     while (true) {
       const group = listGroups[index];
       const checkGroup = await group.findElements(
@@ -140,5 +143,3 @@ export class SafeJobHandler {
     await handler.close();
   }
 }
-
-SafeJobHandler.run();

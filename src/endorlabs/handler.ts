@@ -129,5 +129,3 @@ export class EndorLabsJobScraper {
     await this.driver.quit();
   }
 }
-
-EndorLabsJobScraper.run();

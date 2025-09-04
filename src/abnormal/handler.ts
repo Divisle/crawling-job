@@ -50,8 +50,8 @@ export class AbnormalJobScraper {
       jobData.push({ href, title, department, location });
     }
     // Remove duplicates
-    const uniqueJobData = Array.from(
-      new Map(jobData.map((job) => [job.href, job])).values()
+    const uniqueJobData = jobData.filter(
+      (job, index, self) => index === self.findIndex((t) => t.href === job.href)
     );
     return uniqueJobData;
   }
@@ -124,5 +124,3 @@ export class AbnormalJobScraper {
     await this.driver.quit();
   }
 }
-
-AbnormalJobScraper.run();

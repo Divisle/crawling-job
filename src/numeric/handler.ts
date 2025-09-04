@@ -125,5 +125,3 @@ export class NumericJobScraper {
     await scraper.close();
   }
 }
-
-NumericJobScraper.run();

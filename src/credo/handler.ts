@@ -103,5 +103,3 @@ export class CredoJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-CredoJobHandler.run();

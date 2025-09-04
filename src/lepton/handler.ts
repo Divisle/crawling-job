@@ -104,5 +104,3 @@ export class LeptonJobScraper {
     await scraper.sendMessage(filteredData);
   }
 }
-
-LeptonJobScraper.run();

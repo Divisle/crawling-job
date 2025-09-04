@@ -110,5 +110,3 @@ export class VorlonJobScraper {
     await this.driver.quit();
   }
 }
-
-VorlonJobScraper.run();

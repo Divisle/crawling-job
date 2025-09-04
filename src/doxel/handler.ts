@@ -117,5 +117,3 @@ export class DoxelJobHandler {
     await handler.close();
   }
 }
-
-DoxelJobHandler.run();

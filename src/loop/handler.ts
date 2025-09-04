@@ -83,4 +83,3 @@ export class LoopJobHandler {
     // console.log("Scraped jobs:", jobs);
   }
 }
-LoopJobHandler.run();

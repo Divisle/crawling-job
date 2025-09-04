@@ -82,5 +82,3 @@ export class IoJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-IoJobHandler.run();

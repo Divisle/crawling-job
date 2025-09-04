@@ -87,4 +87,3 @@ export class RecruitmentJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-RecruitmentJobHandler.run();

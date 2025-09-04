@@ -82,5 +82,3 @@ export class WebaiJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-WebaiJobHandler.run();

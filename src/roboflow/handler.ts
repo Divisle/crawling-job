@@ -120,5 +120,3 @@ export class RoboFlowJobScraper {
     await this.driver.quit();
   }
 }
-
-RoboFlowJobScraper.run();

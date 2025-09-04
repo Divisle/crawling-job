@@ -83,4 +83,3 @@ export class RelyanceJobHandler {
     // console.log("Scraped jobs:", jobs);
   }
 }
-RelyanceJobHandler.run();

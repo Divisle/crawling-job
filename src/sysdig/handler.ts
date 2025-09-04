@@ -73,5 +73,3 @@ export class SysdigJobHandler {
     await handler.sendMessage(filteredData);
   }
 }
-
-SysdigJobHandler.run();
