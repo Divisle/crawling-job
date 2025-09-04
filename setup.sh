@@ -43,8 +43,8 @@ case $choice in
         SCHEDULE_DESC="daily at midnight"
         ;;
     4)
-        CRON_SCHEDULE="0 */3 * * *"
-        SCHEDULE_DESC="every 3 hours"
+        CRON_SCHEDULE="0 */6 * * *"
+        SCHEDULE_DESC="every 6 hours"
         ;;
     5)
         echo "Enter custom cron schedule (e.g., '0 9 * * *' for daily at 9 AM):"
