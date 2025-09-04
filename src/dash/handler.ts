@@ -1,13 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { DashJobRepository } from "./database";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 import { buildDashJobMessage } from "../template";
 
 export class DashJobHandler {
   private driver: WebDriver;
-  private app: WebClient;
   constructor(private db = new DashJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -17,7 +16,7 @@ export class DashJobHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+
     const options = new Options();
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -88,11 +87,7 @@ export class DashJobHandler {
     deleteJobs: Prisma.DashJobCreateInput[];
   }) {
     const blocks = buildDashJobMessage(data);
-    await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      blocks,
-    });
+    await buildMessage(1, blocks);
   }
 
   async close() {

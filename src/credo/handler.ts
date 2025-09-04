@@ -1,10 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { CredoJobRepository } from "./database";
 import { buildCredoJobMessage, AshbyhqPostApiPayload } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import axios from "axios";
 export class CredoJobHandler {
-  private app: WebClient;
   constructor(private db = new CredoJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -14,7 +13,6 @@ export class CredoJobHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
   async scrapeJobs(): Promise<Prisma.CredoJobCreateInput[]> {
@@ -91,11 +89,7 @@ export class CredoJobHandler {
   }) {
     const blocks = await buildCredoJobMessage(data);
     try {
-      await this.app.chat.postMessage({
-        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-        blocks,
-      });
+      buildMessage(1, blocks);
       console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);

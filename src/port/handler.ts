@@ -5,11 +5,10 @@ import {
   DefaultJobMessageData,
   PortApiPayload,
 } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import axios from "axios";
 
 export class PortJobScraper {
-  private app: WebClient;
   constructor(private db = new PortJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -19,7 +18,6 @@ export class PortJobScraper {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
   async scrapeJobs(): Promise<Prisma.PortJobCreateInput[]> {
@@ -88,16 +86,8 @@ export class PortJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blockMessage = buildDefaultJobMessage(
-      data,
-      "Port",
-      "https://www.port.io"
-    );
-    await this.app.chat.postMessage({
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      blocks: blockMessage,
-    });
+    const blocks = buildDefaultJobMessage(data, "Port", "https://www.port.io");
+    await buildMessage(1, blocks);
   }
 
   static async run() {

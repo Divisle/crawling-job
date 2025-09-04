@@ -3,11 +3,11 @@ import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { NumericJobRepository } from "./database";
 import { buildNumericJobMessage, NumericJobInterface } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 
 export class NumericJobScraper {
   private driver: WebDriver;
-  private app: WebClient;
+
   constructor(private db = new NumericJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -17,7 +17,7 @@ export class NumericJobScraper {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+
     const options = new Options();
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -109,11 +109,8 @@ export class NumericJobScraper {
     deleteJobs: NumericJobInterface[];
     updateJobs: NumericJobInterface[];
   }) {
-    const messageBlock = buildNumericJobMessage(messageData);
-    await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      blocks: messageBlock,
-    });
+    const blocks = buildNumericJobMessage(messageData);
+    buildMessage(1, blocks);
   }
 
   async close() {

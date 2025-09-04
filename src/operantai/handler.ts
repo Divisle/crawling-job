@@ -3,11 +3,11 @@ import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { OperantaiJobRepository } from "./database";
 import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 
 export class OperantaiJobScraper {
   private driver: WebDriver;
-  private app: WebClient;
+
   constructor(private db = new OperantaiJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -17,7 +17,7 @@ export class OperantaiJobScraper {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+
     const options = new Options();
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -110,16 +110,12 @@ export class OperantaiJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blockMessage = buildDefaultJobMessage(
+    const blocks = buildDefaultJobMessage(
       data,
       "Operantai",
       "https://operant.ai/"
     );
-    await this.app.chat.postMessage({
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      blocks: blockMessage,
-    });
+    await buildMessage(1, blocks);
   }
 
   static async run() {

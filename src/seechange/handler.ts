@@ -1,10 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { buildSeeChangeMessage, SeeChangeApiPayload } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import axios from "axios";
 import { SeeChangeRepository } from "./database";
 export class SeeChangeJobHandler {
-  private app: WebClient;
   constructor(private db = new SeeChangeRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -14,7 +13,6 @@ export class SeeChangeJobHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
   async scrapeJobs(): Promise<Prisma.SeeChangeJobCreateInput[]> {
@@ -65,11 +63,7 @@ export class SeeChangeJobHandler {
     deleteJobs: Prisma.SeeChangeJobCreateInput[];
   }) {
     const blocks = buildSeeChangeMessage(data);
-    await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      blocks,
-    });
+    await buildMessage(1, blocks);
   }
   static async run() {
     const handler = new SeeChangeJobHandler();

@@ -1,10 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { WebaiRepository } from "./database";
 import { buildAshbyhqMessage, AshbyhqApiPayload } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import axios from "axios";
 export class WebaiJobHandler {
-  private app: WebClient;
   constructor(private db = new WebaiRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -14,7 +13,6 @@ export class WebaiJobHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
   async scrapeJobs(): Promise<Prisma.WebaiJobCreateInput[]> {
@@ -70,11 +68,7 @@ export class WebaiJobHandler {
   }) {
     const blocks = await buildAshbyhqMessage(data, "Webai", "http://webai.com");
     try {
-      await this.app.chat.postMessage({
-        // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-        channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-        blocks,
-      });
+      buildMessage(1, blocks);
       console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);

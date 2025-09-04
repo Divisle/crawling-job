@@ -1,13 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { MaraTalentRepository } from "./database";
 import { buildMaraTalentJobMessage } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 
 export class MaraTalentHandler {
   private driver: WebDriver;
-  private app: WebClient;
   constructor(private db = new MaraTalentRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -17,7 +16,7 @@ export class MaraTalentHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
+
     const options = new Options();
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -84,11 +83,7 @@ export class MaraTalentHandler {
     deleteJobs: Prisma.MaraTalentJobCreateInput[];
   }) {
     const blocks = buildMaraTalentJobMessage(data);
-    await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      blocks,
-    });
+    await buildMessage(1, blocks);
   }
 
   async close() {
@@ -96,7 +91,7 @@ export class MaraTalentHandler {
   }
 
   static async run() {
-    const handler = new SafeJobHandler();
+    const handler = new MaraTalentHandler();
     const jobData = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobData);
     await handler.sendMessage(filteredData);
@@ -104,4 +99,4 @@ export class MaraTalentHandler {
   }
 }
 
-SafeJobHandler.run();
+MaraTalentHandler.run();

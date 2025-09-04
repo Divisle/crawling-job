@@ -1,11 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { SysdigJobRepository } from "./database";
 import { buildLeverJobMessage, LeverApiPayload } from "../template";
-import { WebClient } from "@slack/web-api";
+import { buildMessage } from "../global";
 import axios from "axios";
 
 export class SysdigJobHandler {
-  private app: WebClient;
   constructor(private db = new SysdigJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -15,7 +14,6 @@ export class SysdigJobHandler {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-    this.app = new WebClient(process.env.SLACK_BOT_TOKEN);
   }
 
   async scrapeJobs(): Promise<Prisma.SysdigJobCreateInput[]> {
@@ -65,11 +63,7 @@ export class SysdigJobHandler {
     deleteJobs: Prisma.SysdigJobCreateInput[];
   }) {
     const blocks = buildLeverJobMessage(data, "Sysdig", "https://sysdig.com/");
-    await this.app.chat.postMessage({
-      channel: process.env.SLACK_FIRST_CHANNEL_ID!,
-      // channel: process.env.SLACK_TEST_CHANNEL_ID!,
-      blocks,
-    });
+    await buildMessage(1, blocks);
   }
 
   static async run() {
