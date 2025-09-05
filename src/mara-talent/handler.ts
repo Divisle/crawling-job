@@ -42,6 +42,7 @@ export class MaraTalentHandler {
   async scrapeJobs(): Promise<Prisma.MaraTalentJobCreateInput[]> {
     await this.driver.get("https://www.maratalent.co.uk/jobs/");
     const data: Prisma.MaraTalentJobCreateInput[] = [];
+    await this.driver.sleep(3000);
     const listJobElements = await this.driver.findElements(
       By.xpath("//div[@class='job_listings']//ul//a")
     );
