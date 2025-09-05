@@ -1,22 +1,70 @@
-# More advanced approach without entrypoint
 FROM node:20-slim
 
-# Install packages including init system
+# Install all necessary packages in one layer
 RUN apt-get update && apt-get install -y \
-    wget gnupg ca-certificates cron tini \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    wget \
+    gnupg \
+    ca-certificates \
+    cron \
+    tini \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    lsb-release \
+    xdg-utils \
+    && wget -q -O chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt install -y ./chrome.deb \
+    && rm chrome.deb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY package*.json yarn.lock ./
-RUN yarn install
+RUN yarn install --frozen-lockfile --production=false
 COPY . .
 
-# Setup cron
-RUN touch /var/log/cron.log && \
-    echo "0 */3 * * * cd /app && yarn ts-node main.ts >> /var/log/cron.log 2>&1" > /etc/cron.d/crawling-job && \
-    chmod 0644 /etc/cron.d/crawling-job && \
-    crontab /etc/cron.d/crawling-job
+# Create cron job that runs every 3 hours
+RUN mkdir -p /var/log \
+    && touch /var/log/cron.log \
+    && echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" > /etc/cron.d/crawling-job \
+    && echo "NODE_PATH=/app/node_modules" >> /etc/cron.d/crawling-job \
+    && echo "0 */3 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
+    && chmod 0644 /etc/cron.d/crawling-job \
+    && crontab /etc/cron.d/crawling-job \
+    && echo '#!/bin/bash\nset -e\necho "Starting container at $(date)"\necho "Node version: $(node --version)"\necho "Checking ts-node: $(/usr/local/bin/node /app/node_modules/.bin/ts-node --version || echo "ts-node not found")"\nservice cron start\necho "Cron service started successfully"\necho "Active cron jobs:"\ncrontab -l\necho "Container ready. Job will run every 3 hours. Monitoring cron logs..."\nexec tail -f /var/log/cron.log' > /start.sh \
+    && chmod +x /start.sh
 
-# Use tini as init system
+ENV CHROME_BIN=/usr/bin/google-chrome-stable
+ENV CHROME_PATH=/usr/bin/google-chrome-stable
+
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD service cron start && exec tail -f /var/log/cron.log
+CMD ["/start.sh"]
