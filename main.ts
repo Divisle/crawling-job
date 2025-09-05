@@ -34,119 +34,114 @@ import {
   TeleportJobHandler,
   VoizeJobHandler,
   VorlonJobScraper,
+  WebaiJobHandler,
 } from "./src";
 
-async function main() {
-  console.log("Starting job scrapers...");
-  console.time("Total Scraping Time");
-  console.time("Abnormal");
-  await AbnormalJobScraper.run();
-  console.timeEnd("Abnormal");
-  console.time("Anomalo");
-  await AnomaloJobScraper.run();
-  console.timeEnd("Anomalo");
-  console.time("Cardinalops");
-  await CardinalopsJobScraper.run();
-  console.timeEnd("Cardinalops");
-  console.time("Checkly");
-  await ChecklyJobHandler.run();
-  console.timeEnd("Checkly");
-  console.time("Credo");
-  await CredoJobHandler.run();
-  console.timeEnd("Credo");
-  console.time("Dash");
-  await DashJobHandler.run();
-  console.timeEnd("Dash");
-  console.time("Doxel");
-  await DoxelJobHandler.run();
-  console.timeEnd("Doxel");
-  console.time("EndorLabs");
-  await EndorLabsJobScraper.run();
-  console.timeEnd("EndorLabs");
-  console.time("Enterpret");
-  await EnterpretJobScraper.run();
-  console.timeEnd("Enterpret");
-  console.time("FarSight");
-  await FarSightJobHandler.run();
-  console.timeEnd("FarSight");
-  console.time("FluidStack");
-  await FluidStackJobHandler.run();
-  console.timeEnd("FluidStack");
-  console.time("Formant");
-  await FormantJobScraper.run();
-  console.timeEnd("Formant");
-  console.time("Hightouch");
-  await HightouchJobScraper.run();
-  console.timeEnd("Hightouch");
-  console.time("Io");
-  await IoJobHandler.run();
-  console.timeEnd("Io");
-  console.time("Laurel");
-  await LaurelJobHandler.run();
-  console.timeEnd("Laurel");
-  console.time("Legion");
-  await LegionJobScraper.run();
-  console.timeEnd("Legion");
-  console.time("Lepton");
-  await LeptonJobScraper.run();
-  console.timeEnd("Lepton");
-  console.time("Loop");
-  await LoopJobHandler.run();
-  console.timeEnd("Loop");
-  console.time("Lumos");
-  await LumosJobScraper.run();
-  console.timeEnd("Lumos");
-  console.time("MaraTalent");
-  await MaraTalentHandler.run();
-  console.timeEnd("MaraTalent");
-  console.time("Materialize");
-  await MaterializeJobScraper.run();
-  console.timeEnd("Materialize");
-  console.time("Numeric");
-  await NumericJobScraper.run();
-  console.timeEnd("Numeric");
-  console.time("Omnea");
-  await OmneaJobHandler.run();
-  console.timeEnd("Omnea");
-  console.time("Operantai");
-  await OperantaiJobScraper.run();
-  console.timeEnd("Operantai");
-  console.time("Pivotal");
-  await PivotalJobScraper.run();
-  console.timeEnd("Pivotal");
-  console.time("Port");
-  await PortJobScraper.run();
-  console.timeEnd("Port");
-  console.time("Recruitment");
-  await RecruitmentJobHandler.run();
-  console.timeEnd("Recruitment");
-  console.time("Relyance");
-  await RelyanceJobHandler.run();
-  console.timeEnd("Relyance");
-  console.time("RoboFlow");
-  await RoboFlowJobScraper.run();
-  console.timeEnd("RoboFlow");
-  console.time("Safe");
-  await SafeJobHandler.run();
-  console.timeEnd("Safe");
-  console.time("SeeChange");
-  await SeeChangeJobHandler.run();
-  console.timeEnd("SeeChange");
-  console.time("Sysdig");
-  await SysdigJobHandler.run();
-  console.timeEnd("Sysdig");
-  console.time("Teleport");
-  await TeleportJobHandler.run();
-  console.timeEnd("Teleport");
-  console.time("Voize");
-  await VoizeJobHandler.run();
-  console.timeEnd("Voize");
-  console.time("Vorlon");
-  await VorlonJobScraper.run();
-  console.timeEnd("Vorlon");
-
-  console.timeEnd("Total Scraping Time");
-  console.log("All job scrapers completed.");
+async function runScraperSafely(
+  scraperName: string,
+  scraperFunction: () => Promise<void>
+) {
+  console.time(scraperName);
+  try {
+    await scraperFunction();
+    console.log(`✅ ${scraperName} completed successfully`);
+  } catch (error) {
+    console.error(`❌ ${scraperName} failed with error:`);
+    console.error(
+      `Error message: ${error instanceof Error ? error.message : String(error)}`
+    );
+    if (error instanceof Error && error.stack) {
+      console.error(`Stack trace: ${error.stack}`);
+    }
+    console.log(`⏭️  Continuing to next scraper...`);
+  } finally {
+    console.timeEnd(scraperName);
+  }
 }
 
-main();
+async function main() {
+  console.log("🚀 Starting job scrapers...");
+  console.log(`Started at: ${new Date().toISOString()}`);
+  console.time("Total Scraping Time");
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  const scrapers = [
+    { name: "Abnormal", run: () => AbnormalJobScraper.run() },
+    { name: "Anomalo", run: () => AnomaloJobScraper.run() },
+    { name: "Cardinalops", run: () => CardinalopsJobScraper.run() },
+    { name: "Checkly", run: () => ChecklyJobHandler.run() },
+    { name: "Credo", run: () => CredoJobHandler.run() },
+    { name: "Dash", run: () => DashJobHandler.run() },
+    { name: "Doxel", run: () => DoxelJobHandler.run() },
+    { name: "EndorLabs", run: () => EndorLabsJobScraper.run() },
+    { name: "Enterpret", run: () => EnterpretJobScraper.run() },
+    { name: "FarSight", run: () => FarSightJobHandler.run() },
+    { name: "FluidStack", run: () => FluidStackJobHandler.run() },
+    { name: "Formant", run: () => FormantJobScraper.run() },
+    { name: "Hightouch", run: () => HightouchJobScraper.run() },
+    { name: "Io", run: () => IoJobHandler.run() },
+    { name: "Laurel", run: () => LaurelJobHandler.run() },
+    { name: "Legion", run: () => LegionJobScraper.run() },
+    { name: "Lepton", run: () => LeptonJobScraper.run() },
+    { name: "Loop", run: () => LoopJobHandler.run() },
+    { name: "Lumos", run: () => LumosJobScraper.run() },
+    { name: "MaraTalent", run: () => MaraTalentHandler.run() },
+    { name: "Materialize", run: () => MaterializeJobScraper.run() },
+    { name: "Numeric", run: () => NumericJobScraper.run() },
+    { name: "Omnea", run: () => OmneaJobHandler.run() },
+    { name: "Operantai", run: () => OperantaiJobScraper.run() },
+    { name: "Pivotal", run: () => PivotalJobScraper.run() },
+    { name: "Port", run: () => PortJobScraper.run() },
+    { name: "Recruitment", run: () => RecruitmentJobHandler.run() },
+    { name: "Relyance", run: () => RelyanceJobHandler.run() },
+    { name: "RoboFlow", run: () => RoboFlowJobScraper.run() },
+    { name: "Safe", run: () => SafeJobHandler.run() },
+    { name: "SeeChange", run: () => SeeChangeJobHandler.run() },
+    { name: "Sysdig", run: () => SysdigJobHandler.run() },
+    { name: "Teleport", run: () => TeleportJobHandler.run() },
+    { name: "Voize", run: () => VoizeJobHandler.run() },
+    { name: "Vorlon", run: () => VorlonJobScraper.run() },
+    { name: "Webai", run: () => WebaiJobHandler.run() },
+  ];
+
+  console.log(`📊 Total scrapers to run: ${scrapers.length}`);
+  console.log("─".repeat(50));
+
+  for (const scraper of scrapers) {
+    try {
+      await runScraperSafely(scraper.name, scraper.run);
+      successCount++;
+    } catch (error) {
+      errorCount++;
+      console.error(`💥 Unexpected error in ${scraper.name}:`, error);
+    }
+  }
+
+  console.log("─".repeat(50));
+  console.timeEnd("Total Scraping Time");
+  console.log(`📈 Scraping Summary:`);
+  console.log(`  ✅ Successful: ${successCount}`);
+  console.log(`  ❌ Failed: ${errorCount}`);
+  console.log(
+    `  📊 Success Rate: ${((successCount / scrapers.length) * 100).toFixed(1)}%`
+  );
+  console.log(`🏁 All job scrapers completed at: ${new Date().toISOString()}`);
+}
+
+// Global error handlers
+process.on("uncaughtException", (error) => {
+  console.error("💥 Uncaught Exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("💥 Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+main().catch((error) => {
+  console.error("💥 Main function failed:", error);
+  process.exit(1);
+});
