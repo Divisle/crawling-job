@@ -98,7 +98,7 @@ export class VoizeJobHandler {
       "https://en.voize.de/"
     );
     try {
-      buildMessage(1, blocks);
+      await buildMessage(1, blocks);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -108,6 +108,14 @@ export class VoizeJobHandler {
     const handler = new VoizeJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      return;
+    }
     await handler.sendMessage(filteredData);
   }
 }

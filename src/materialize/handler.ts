@@ -117,6 +117,15 @@ export class MaterializeJobScraper {
     const scraper = new MaterializeJobScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      await scraper.close();
+      return;
+    }
     await scraper.sendMessage(filteredData);
     await scraper.close();
   }

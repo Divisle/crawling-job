@@ -110,7 +110,7 @@ export class NumericJobScraper {
     updateJobs: NumericJobInterface[];
   }) {
     const blocks = buildNumericJobMessage(messageData);
-    buildMessage(1, blocks);
+    await buildMessage(1, blocks);
   }
 
   async close() {
@@ -121,6 +121,15 @@ export class NumericJobScraper {
     const scraper = new NumericJobScraper();
     const data = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(data);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      await scraper.close();
+      return;
+    }
     await scraper.sendMessage(filteredData);
     await scraper.close();
   }

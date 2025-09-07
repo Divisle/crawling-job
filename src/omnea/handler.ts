@@ -73,7 +73,7 @@ export class OmneaJobHandler {
       "https://www.omnea.co/"
     );
     try {
-      buildMessage(1, blocks);
+      await buildMessage(1, blocks);
       console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -84,6 +84,14 @@ export class OmneaJobHandler {
     const handler = new OmneaJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      return;
+    }
     await handler.sendMessage(filteredData);
   }
 }

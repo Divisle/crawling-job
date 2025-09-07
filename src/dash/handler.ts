@@ -98,6 +98,15 @@ export class DashJobHandler {
     const handler = new DashJobHandler();
     const jobData = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobData);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      await handler.close();
+      return;
+    }
     await handler.sendMessage(filteredData);
     await handler.close();
   }

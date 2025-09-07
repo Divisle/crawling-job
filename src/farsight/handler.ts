@@ -68,6 +68,14 @@ export class FarSightJobHandler {
     const handler = new FarSightJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      return;
+    }
     await handler.sendMessage(filteredData);
   }
 }

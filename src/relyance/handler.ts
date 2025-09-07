@@ -79,7 +79,14 @@ export class RelyanceJobHandler {
     const handler = new RelyanceJobHandler();
     const jobs = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobs);
-    await handler.sendMessage(filteredData);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      return;
+    }
     // console.log("Scraped jobs:", jobs);
   }
 }

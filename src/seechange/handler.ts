@@ -69,6 +69,14 @@ export class SeeChangeJobHandler {
     const handler = new SeeChangeJobHandler();
     const jobs = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobs);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      return;
+    }
     await handler.sendMessage(filteredData);
   }
 }

@@ -96,7 +96,7 @@ export class PivotalJobScraper {
   }) {
     const blocks = await buildPivotalJobMessage(messageData);
     try {
-      buildMessage(1, blocks);
+      await buildMessage(1, blocks);
       console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -111,6 +111,15 @@ export class PivotalJobScraper {
     const scraper = new PivotalJobScraper();
     const data = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(data);
+    if (
+      filteredData.newJobs.length === 0 &&
+      filteredData.updateJobs.length === 0 &&
+      filteredData.deleteJobs.length === 0
+    ) {
+      console.log("No job changes detected.");
+      await scraper.close();
+      return;
+    }
     await scraper.sendMessage(filteredData);
     await scraper.close();
   }
