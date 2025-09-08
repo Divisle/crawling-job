@@ -110,7 +110,7 @@ export class NumericJobScraper {
     updateJobs: NumericJobInterface[];
   }) {
     const blocks = buildNumericJobMessage(messageData);
-    await buildMessage(1, blocks);
+    await buildMessage(2, blocks);
   }
 
   async close() {

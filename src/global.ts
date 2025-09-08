@@ -25,6 +25,7 @@ export async function buildMessage(channel: number, blocks: any[]) {
             ? process.env.SLACK_FIRST_CHANNEL_ID!
             : process.env.SLACK_SECOND_CHANNEL_ID!,
         blocks: chunk,
+        unfurl_links: false,
       });
     }
     return;

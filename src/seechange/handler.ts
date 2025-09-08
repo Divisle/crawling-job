@@ -63,7 +63,7 @@ export class SeeChangeJobHandler {
     deleteJobs: Prisma.SeeChangeJobCreateInput[];
   }) {
     const blocks = buildSeeChangeMessage(data);
-    await buildMessage(1, blocks);
+    await buildMessage(2, blocks);
   }
   static async run() {
     const handler = new SeeChangeJobHandler();

@@ -108,7 +108,7 @@ export class AnomaloJobScraper {
       "Anomalo",
       "https://www.anomalo.com"
     );
-    await buildMessage(1, blocks);
+    await buildMessage(2, blocks);
   }
 
   static async run() {

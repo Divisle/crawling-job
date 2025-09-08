@@ -89,7 +89,7 @@ export class CredoJobHandler {
   }) {
     const blocks = await buildCredoJobMessage(data);
     try {
-      await buildMessage(1, blocks);
+      await buildMessage(2, blocks);
       console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);

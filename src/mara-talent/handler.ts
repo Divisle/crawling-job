@@ -84,7 +84,7 @@ export class MaraTalentHandler {
     deleteJobs: Prisma.MaraTalentJobCreateInput[];
   }) {
     const blocks = buildMaraTalentJobMessage(data);
-    await buildMessage(1, blocks);
+    await buildMessage(2, blocks);
   }
 
   async close() {
