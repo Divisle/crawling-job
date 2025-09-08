@@ -31,6 +31,7 @@ export class EndorLabsJobScraper {
 
   async scrapeJobs(): Promise<Prisma.EndorLabsJobCreateInput[]> {
     await this.driver.get("https://job-boards.greenhouse.io/endorlabs");
+    // this.driver.manage().setTimeouts({ implicit: 5000 });
     const departmentElements = await this.driver.findElements(
       By.xpath("//div[@class='job-posts--table--department']")
     );
@@ -42,7 +43,9 @@ export class EndorLabsJobScraper {
       const listJobElements = await departmentElement.findElements(
         By.xpath(".//tbody//tr")
       );
-      for (const jobElement of listJobElements) {
+      const rowCount = (await this.driver.findElements(By.css("tr"))).length;
+      for (let i = 0; i < rowCount; i++) {
+        const jobElement = (await this.driver.findElements(By.css("tr")))[i];
         const href = await jobElement
           .findElement(By.xpath(".//a"))
           .getAttribute("href");
