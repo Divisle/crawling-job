@@ -63,6 +63,8 @@ RUN mkdir -p /var/log \
     && echo "NODE_PATH=/app/node_modules" >> /etc/cron.d/crawling-job \
     && echo "40,50 15 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
     && echo "0,10 16 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
+    # For daily run at 00:00 GMT+7 (17:00 UTC) - uncomment the line below when needed
+    # && echo "0 17 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
     && chmod 0644 /etc/cron.d/crawling-job \
     && crontab /etc/cron.d/crawling-job \
     && echo '#!/bin/bash\nset -e\necho "Starting container at $(date)"\necho "Node version: $(node --version)"\necho "Checking ts-node: $(/usr/local/bin/node /app/node_modules/.bin/ts-node --version || echo "ts-node not found")"\nservice cron start\necho "Cron service started successfully"\necho "Active cron jobs:"\ncrontab -l\necho "Container ready. Job will run at 22:40, 22:50, 23:00, 23:10 GMT+7 daily. Monitoring cron logs..."\necho "Initial cron log content:" > /var/log/cron.log\necho "$(date): Container started, waiting for cron jobs..." >> /var/log/cron.log\nexec tail -f /var/log/cron.log' > /start.sh \
