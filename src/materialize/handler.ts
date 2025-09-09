@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Builder, By, WebDriver, until } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { MaterializeJobRepository } from "./database";
 import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
@@ -28,15 +28,32 @@ export class MaterializeJobScraper {
     options.addArguments("--no-sandbox");
     options.addArguments("--disable-dev-shm-usage");
     options.addArguments("--disable-gpu");
+    options.addArguments("--disable-extensions");
+    options.addArguments("--disable-plugins");
 
     this.driver = new Builder()
       .forBrowser("chrome")
       .setChromeOptions(options)
       .build();
+
+    // Set timeouts
+    this.driver.manage().setTimeouts({ implicit: 10000, pageLoad: 30000 });
   }
 
   async scrapeJobs(): Promise<Prisma.MaterializeJobCreateInput[]> {
     await this.driver.get("https://materialize.com/careers/");
+    // Wait for the page to load completely
+    await this.driver.sleep(3000);
+
+    // Wait for job sections to be present with explicit wait
+    console.log("Waiting for job sections to load...");
+    await this.driver.wait(
+      until.elementsLocated(By.xpath("//div[@class='svelte-z5mc0o']")),
+      15000
+    );
+
+    // Additional wait to ensure all content is loaded
+    await this.driver.sleep(2000);
     const departmentElements = await this.driver.findElements(
       By.xpath("//div[@class='svelte-z5mc0o']")
     );
@@ -121,6 +138,8 @@ export class MaterializeJobScraper {
   static async run() {
     const scraper = new MaterializeJobScraper();
     const jobData = await scraper.scrapeJobs();
+    // console.log(`Scraped ${jobData.length} jobs from Materialize.`);
+    // console.log(jobData);
     const filteredData = await scraper.filterData(jobData);
     if (
       filteredData.newJobs.length === 0 &&
@@ -139,3 +158,5 @@ export class MaterializeJobScraper {
     await this.driver.quit();
   }
 }
+
+// MaterializeJobScraper.run();
