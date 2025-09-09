@@ -44,6 +44,9 @@ export class LeptonJobScraper {
         }
       );
       for (const job of nextResult.data.jobPostings) {
+        if (!job.externalPath || !job.title || !job.locationsText) {
+          continue;
+        }
         jobData.push({
           title: job.title,
           location: job.locationsText,

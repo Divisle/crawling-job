@@ -19,15 +19,15 @@ export class OperantaiJobScraper {
     }
 
     const options = new Options();
+    options.addArguments(
+      `--user-data-dir=/tmp/chrome_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 11)}`
+    );
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
     options.addArguments("--disable-dev-shm-usage");
     options.addArguments("--disable-gpu");
-    options.addArguments(
-      `--user-data-dir=/tmp/chrome_${Date.now()}_${Math.random()
-        .toString(36)
-        .substr(2, 9)}`
-    );
 
     this.driver = new Builder()
       .forBrowser("chrome")
