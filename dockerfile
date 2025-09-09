@@ -52,6 +52,9 @@ COPY package*.json yarn.lock ./
 RUN yarn install --frozen-lockfile --production=false
 COPY . .
 
+# Generate Prisma client during build
+RUN yarn prisma generate
+
 # Create cron job that runs every hour 
 RUN mkdir -p /var/log \
     && touch /var/log/cron.log \
