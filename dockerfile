@@ -52,15 +52,16 @@ COPY package*.json yarn.lock ./
 RUN yarn install --frozen-lockfile --production=false
 COPY . .
 
-# Create cron job that runs every 1 hour
+# Create cron job that runs every hour 
 RUN mkdir -p /var/log \
     && touch /var/log/cron.log \
+    && chmod 666 /var/log/cron.log \
     && echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" > /etc/cron.d/crawling-job \
     && echo "NODE_PATH=/app/node_modules" >> /etc/cron.d/crawling-job \
-    && echo "0 * * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
+    && echo "*/10 * * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
     && chmod 0644 /etc/cron.d/crawling-job \
     && crontab /etc/cron.d/crawling-job \
-    && echo '#!/bin/bash\nset -e\necho "Starting container at $(date)"\necho "Node version: $(node --version)"\necho "Checking ts-node: $(/usr/local/bin/node /app/node_modules/.bin/ts-node --version || echo "ts-node not found")"\nservice cron start\necho "Cron service started successfully"\necho "Active cron jobs:"\ncrontab -l\necho "Container ready. Job will run every 1 hour. Monitoring cron logs..."\nexec tail -f /var/log/cron.log' > /start.sh \
+    && echo '#!/bin/bash\nset -e\necho "Starting container at $(date)"\necho "Node version: $(node --version)"\necho "Checking ts-node: $(/usr/local/bin/node /app/node_modules/.bin/ts-node --version || echo "ts-node not found")"\nservice cron start\necho "Cron service started successfully"\necho "Active cron jobs:"\ncrontab -l\necho "Container ready. Job will run every hour. Monitoring cron logs..."\necho "Initial cron log content:" > /var/log/cron.log\necho "$(date): Container started, waiting for cron jobs..." >> /var/log/cron.log\nexec tail -f /var/log/cron.log' > /start.sh \
     && chmod +x /start.sh
 
 ENV CHROME_BIN=/usr/bin/google-chrome-stable
