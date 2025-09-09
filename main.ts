@@ -40,11 +40,12 @@ import {
 async function runScraperSafely(
   scraperName: string,
   scraperFunction: () => Promise<void>
-) {
+): Promise<boolean> {
   console.time(scraperName);
   try {
     await scraperFunction();
     console.log(`✅ ${scraperName} completed successfully`);
+    return true; // Success
   } catch (error) {
     console.error(`❌ ${scraperName} failed with error:`);
     console.error(
@@ -54,6 +55,7 @@ async function runScraperSafely(
       console.error(`Stack trace: ${error.stack}`);
     }
     console.log(`⏭️  Continuing to next scraper...`);
+    return false; // Failed
   } finally {
     console.timeEnd(scraperName);
   }
@@ -110,12 +112,11 @@ async function main() {
   console.log("─".repeat(50));
 
   for (const scraper of scrapers) {
-    try {
-      await runScraperSafely(scraper.name, scraper.run);
+    const success = await runScraperSafely(scraper.name, scraper.run);
+    if (success) {
       successCount++;
-    } catch (error) {
+    } else {
       errorCount++;
-      console.error(`💥 Unexpected error in ${scraper.name}:`, error);
     }
   }
 
