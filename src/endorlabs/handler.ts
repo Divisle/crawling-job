@@ -45,12 +45,13 @@ export class EndorLabsJobScraper {
       const department = await departmentElement
         .findElement(By.xpath(".//h3"))
         .getText();
-      const listJobElements = await departmentElement.findElements(
-        By.xpath(".//tbody//tr")
-      );
-      const rowCount = (await this.driver.findElements(By.css("tr"))).length;
-      for (let i = 0; i < rowCount; i++) {
-        const jobElement = (await this.driver.findElements(By.css("tr")))[i];
+      const listJobElements = (
+        await departmentElement.findElements(By.xpath(".//tbody//tr"))
+      ).length;
+      for (let i = 0; i < listJobElements; i++) {
+        const jobElement = (
+          await departmentElement.findElements(By.xpath(".//tbody//tr"))
+        )[i];
         const href = await jobElement
           .findElement(By.xpath(".//a"))
           .getAttribute("href");
@@ -128,6 +129,7 @@ export class EndorLabsJobScraper {
   static async run() {
     const scraper = new EndorLabsJobScraper();
     const jobData = await scraper.scrapeJobs();
+    // console.log(jobData);
     const filteredData = await scraper.filterData(jobData);
     if (
       filteredData.newJobs.length === 0 &&
@@ -146,3 +148,5 @@ export class EndorLabsJobScraper {
     await this.driver.quit();
   }
 }
+
+// EndorLabsJobScraper.run();
