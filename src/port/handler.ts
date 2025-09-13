@@ -87,7 +87,7 @@ export class PortJobScraper {
 
   async sendMessage(data: DefaultJobMessageData) {
     const blocks = buildDefaultJobMessage(data, "Port", "https://www.port.io");
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
 
   static async run() {
@@ -100,8 +100,8 @@ export class PortJobScraper {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.sendMessage(filteredData);
+    return await scraper.sendMessage(filteredData);
   }
 }

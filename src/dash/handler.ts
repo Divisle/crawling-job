@@ -92,7 +92,10 @@ export class DashJobHandler {
     deleteJobs: Prisma.DashJobCreateInput[];
   }) {
     const blocks = buildDashJobMessage(data);
-    await buildMessage(1, blocks);
+    return {
+      blocks,
+      channel: 1,
+    };
   }
 
   async close() {
@@ -110,9 +113,9 @@ export class DashJobHandler {
     ) {
       console.log("No job changes detected.");
       await handler.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
     await handler.close();
+    return await handler.sendMessage(filteredData);
   }
 }

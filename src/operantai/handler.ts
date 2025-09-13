@@ -199,7 +199,7 @@ export class OperantaiJobScraper {
       "Operantai",
       "https://operant.ai/"
     );
-    await buildMessage(2, blocks);
+    return { blocks, channel: 2 };
   }
 
   static async run() {
@@ -213,9 +213,9 @@ export class OperantaiJobScraper {
         filteredData.deleteJobs.length === 0
       ) {
         console.log("No job changes detected.");
-        return;
+        return { blocks: [] as any[], channel: 0 };
       }
-      await scraper.sendMessage(filteredData);
+      return await scraper.sendMessage(filteredData);
     } finally {
       await scraper.close();
     }

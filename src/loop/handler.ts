@@ -73,7 +73,7 @@ export class LoopJobHandler {
       "Loop",
       "https://www.loop.com/"
     );
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
   static async run() {
     const handler = new LoopJobHandler();
@@ -85,9 +85,9 @@ export class LoopJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
+    return await handler.sendMessage(filteredData);
     // console.log("Scraped jobs:", jobs);
   }
 }

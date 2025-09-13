@@ -67,12 +67,7 @@ export class WebaiJobHandler {
     updateJobs: Prisma.WebaiJobCreateInput[];
   }) {
     const blocks = await buildAshbyhqMessage(data, "Webai", "http://webai.com");
-    try {
-      await buildMessage(2, blocks);
-      console.log("Message sent successfully");
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+    return { blocks, channel: 2 };
   }
 
   static async run() {
@@ -85,8 +80,11 @@ export class WebaiJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return {
+        blocks: [] as any[],
+        channel: 0,
+      };
     }
-    await handler.sendMessage(filteredData);
+    return await handler.sendMessage(filteredData);
   }
 }

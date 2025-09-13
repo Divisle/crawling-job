@@ -73,7 +73,7 @@ export class RelyanceJobHandler {
       "Relyance",
       "https://www.relyance.ai/"
     );
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
   static async run() {
     const handler = new RelyanceJobHandler();
@@ -85,8 +85,9 @@ export class RelyanceJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
+    return await handler.sendMessage(filteredData);
     // console.log("Scraped jobs:", jobs);
   }
 }

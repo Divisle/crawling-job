@@ -95,7 +95,7 @@ export class TeleportJobHandler {
     deleteJobs: Prisma.TeleportJobCreateInput[];
   }) {
     const blocks = buildTeleportJobMessage(data);
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
 
   async close() {
@@ -113,9 +113,9 @@ export class TeleportJobHandler {
     ) {
       console.log("No job changes detected.");
       await handler.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
     await handler.close();
+    return await handler.sendMessage(filteredData);
   }
 }

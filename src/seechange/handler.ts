@@ -63,7 +63,7 @@ export class SeeChangeJobHandler {
     deleteJobs: Prisma.SeeChangeJobCreateInput[];
   }) {
     const blocks = buildSeeChangeMessage(data);
-    await buildMessage(2, blocks);
+    return { blocks, channel: 2 };
   }
   static async run() {
     const handler = new SeeChangeJobHandler();
@@ -75,8 +75,8 @@ export class SeeChangeJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
+    return await handler.sendMessage(filteredData);
   }
 }

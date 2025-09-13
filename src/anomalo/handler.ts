@@ -113,7 +113,10 @@ export class AnomaloJobScraper {
       "Anomalo",
       "https://www.anomalo.com"
     );
-    await buildMessage(2, blocks);
+    return {
+      blocks,
+      channel: 2,
+    };
   }
 
   static async run() {
@@ -127,10 +130,10 @@ export class AnomaloJobScraper {
     ) {
       console.log("No job changes detected.");
       await scraper.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.sendMessage(filteredData);
     await scraper.close();
+    return await scraper.sendMessage(filteredData);
   }
 
   async close() {

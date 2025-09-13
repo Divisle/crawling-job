@@ -100,12 +100,7 @@ export class PivotalJobScraper {
     updateJobs: Prisma.PivotalJobCreateInput[];
   }) {
     const blocks = await buildPivotalJobMessage(messageData);
-    try {
-      await buildMessage(1, blocks);
-      console.log("Message sent successfully");
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+    return { blocks, channel: 1 };
   }
 
   async close() {
@@ -123,9 +118,9 @@ export class PivotalJobScraper {
     ) {
       console.log("No job changes detected.");
       await scraper.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.sendMessage(filteredData);
     await scraper.close();
+    return await scraper.sendMessage(filteredData);
   }
 }

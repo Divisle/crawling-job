@@ -97,11 +97,7 @@ export class VoizeJobHandler {
       "Voize",
       "https://en.voize.de/"
     );
-    try {
-      await buildMessage(1, blocks);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+    return { blocks, channel: 1 };
   }
 
   static async run() {
@@ -114,8 +110,8 @@ export class VoizeJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
+    return await handler.sendMessage(filteredData);
   }
 }

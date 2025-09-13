@@ -63,7 +63,7 @@ export class SysdigJobHandler {
     deleteJobs: Prisma.SysdigJobCreateInput[];
   }) {
     const blocks = buildLeverJobMessage(data, "Sysdig", "https://sysdig.com/");
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
 
   static async run() {
@@ -76,8 +76,8 @@ export class SysdigJobHandler {
       filteredData.deleteJobs.length === 0
     ) {
       console.log("No job changes detected.");
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
+    return await handler.sendMessage(filteredData);
   }
 }

@@ -126,7 +126,10 @@ export class CardinalopsJobScraper {
     deleteJobs: Prisma.CardinalopsJobCreateInput[];
   }) {
     const blocks = buildCardinalopsJobMessage(data);
-    await buildMessage(1, blocks);
+    return {
+      blocks,
+      channel: 1,
+    };
   }
 
   static async run() {
@@ -140,10 +143,11 @@ export class CardinalopsJobScraper {
     ) {
       console.log("No job changes detected.");
       await scraper.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.sendMessage(filteredData);
+
     await scraper.close();
+    return await scraper.sendMessage(filteredData);
   }
 
   async close() {

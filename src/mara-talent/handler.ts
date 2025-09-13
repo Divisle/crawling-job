@@ -89,7 +89,7 @@ export class MaraTalentHandler {
     deleteJobs: Prisma.MaraTalentJobCreateInput[];
   }) {
     const blocks = buildMaraTalentJobMessage(data);
-    await buildMessage(2, blocks);
+    return { blocks, channel: 2 };
   }
 
   async close() {
@@ -107,9 +107,9 @@ export class MaraTalentHandler {
     ) {
       console.log("No job changes detected.");
       await handler.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
     await handler.close();
+    return await handler.sendMessage(filteredData);
   }
 }

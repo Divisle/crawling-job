@@ -107,7 +107,10 @@ export class DoxelJobHandler {
     deleteJobs: Prisma.DoxelJobCreateInput[];
   }) {
     const blocks = buildLeverJobMessage(data, "Doxel", "https://doxel.com/");
-    await buildMessage(1, blocks);
+    return {
+      blocks,
+      channel: 1,
+    };
   }
 
   async close() {
@@ -125,9 +128,9 @@ export class DoxelJobHandler {
     ) {
       console.log("No job changes detected.");
       await handler.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await handler.sendMessage(filteredData);
     await handler.close();
+    return await handler.sendMessage(filteredData);
   }
 }

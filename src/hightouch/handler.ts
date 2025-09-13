@@ -114,7 +114,7 @@ export class HightouchJobScraper {
       "Hightouch",
       "https://hightouch.com/"
     );
-    await buildMessage(1, blocks);
+    return { blocks, channel: 1 };
   }
 
   static async run() {
@@ -128,10 +128,10 @@ export class HightouchJobScraper {
     ) {
       console.log("No job changes detected.");
       await scraper.close();
-      return;
+      return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.sendMessage(filteredData);
     await scraper.close();
+    return await scraper.sendMessage(filteredData);
   }
 
   async close() {
