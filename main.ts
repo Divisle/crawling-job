@@ -36,16 +36,28 @@ import {
   VorlonJobScraper,
   WebaiJobHandler,
 } from "./src";
+import { buildMessage } from "./src/global";
 
 async function runScraperSafely(
   scraperName: string,
-  scraperFunction: () => Promise<void>
-): Promise<boolean> {
+  scraperFunction: () => Promise<{
+    blocks: any[];
+    channel: number;
+  }>
+): Promise<{
+  blocks: any[];
+  channel: number;
+  status: boolean;
+}> {
   console.time(scraperName);
   try {
-    await scraperFunction();
+    const result = await scraperFunction();
     console.log(`✅ ${scraperName} completed successfully`);
-    return true; // Success
+    return {
+      blocks: result.blocks,
+      channel: result.channel,
+      status: true,
+    };
   } catch (error) {
     console.error(`❌ ${scraperName} failed with error:`);
     console.error(
@@ -55,7 +67,11 @@ async function runScraperSafely(
       console.error(`Stack trace: ${error.stack}`);
     }
     console.log(`⏭️  Continuing to next scraper...`);
-    return false; // Failed
+    return {
+      blocks: [],
+      channel: 0,
+      status: false,
+    };
   } finally {
     console.timeEnd(scraperName);
   }
@@ -110,14 +126,49 @@ async function main() {
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);
   console.log("─".repeat(50));
-
+  const messageBlocks1: any[] = [];
+  let messageChannel1 = 0;
+  const messageBlocks2: any[] = [];
+  let messageChannel2 = 0;
   for (const scraper of scrapers) {
-    const success = await runScraperSafely(scraper.name, scraper.run);
-    if (success) {
+    const result = await runScraperSafely(scraper.name, scraper.run);
+    if (result.status) {
       successCount++;
+      if (result.channel === 1) {
+        messageBlocks1.push(...result.blocks);
+        messageChannel1++;
+      } else {
+        messageBlocks2.push(...result.blocks);
+        messageChannel2++;
+      }
     } else {
       errorCount++;
     }
+  }
+  // Send all accumulated messages at once
+  if (messageBlocks1.length > 0) {
+    console.log(
+      `📨 Sending accumulated message to channel 1 with ${messageBlocks1.length} blocks from ${messageChannel1} scrapers.`
+    );
+    try {
+      await buildMessage(1, messageBlocks1);
+    } catch (error) {
+      console.error("💥 Failed to send message to channel 1:", error);
+    }
+  } else {
+    console.log("📭 No messages to send to channel 1.");
+  }
+  if (messageBlocks2.length > 0) {
+    console.log(
+      `📨 Sending accumulated message to channel 2 with ${messageBlocks2.length} blocks from ${messageChannel2} scrapers.`
+    );
+    try {
+      await buildMessage(2, messageBlocks2);
+    } catch (error) {
+      console.error("💥 Failed to send message to channel 2:", error);
+    }
+  } else {
+    console.log("📭 No messages to send to channel 2.");
   }
 
   console.log("─".repeat(50));
