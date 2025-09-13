@@ -125,6 +125,8 @@ export class EnterpretJobScraper {
   static async run() {
     const scraper = new EnterpretJobScraper();
     const jobData = await scraper.scrapeJobs();
+    // console.log(`Scraped ${jobData.length} jobs from Enterpret.`);
+    // console.log(jobData);
     const filteredData = await scraper.filterData(jobData);
     if (
       filteredData.newJobs.length === 0 &&
@@ -143,3 +145,5 @@ export class EnterpretJobScraper {
     await this.driver.quit();
   }
 }
+
+// EnterpretJobScraper.run();

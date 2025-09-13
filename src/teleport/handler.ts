@@ -60,10 +60,10 @@ export class TeleportJobHandler {
           .findElement(By.css("a"))
           .getAttribute("href");
         const location = await jobElement
-          .findElement(By.xpath(".//p[contains(@class, 'iBctCo')]"))
+          .findElement(By.xpath(".//p[contains(@class, 'khUGMx')]"))
           .getText();
         const type = await jobElement
-          .findElement(By.xpath(".//p[contains(@class, 'jYstAY')]"))
+          .findElement(By.xpath(".//p[contains(@class, 'gzvAwt')]"))
           .getAttribute("innerText");
         data.push({ teamName, title, href, location, type });
       }
