@@ -23,146 +23,66 @@ export function buildNumericJobMessage(data: {
   deleteJobs: NumericJobInterface[];
 }) {
   const blocks: any[] = [];
-  const divider = {
-    type: "divider",
-  };
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: `We found *${data.newJobs.length} new jobs*, *${data.updateJobs.length} updated jobs* and *${data.deleteJobs.length} jobs removed* from *<https://www.numeric.io/|Numeric>*`,
-    },
-  });
-  if (
-    data.newJobs.length === 0 &&
-    data.updateJobs.length === 0 &&
-    data.deleteJobs.length === 0
-  ) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: "No job updates found.",
-      },
-    });
-  }
   if (data.newJobs.length > 0) {
     blocks.push({
       type: "header",
       text: {
         type: "plain_text",
-        text: "New Jobs",
+        text: "--------------------------------------------------\n:rocket: NEW JOB POSTED @ Numeric :rocket:\n--------------------------------------------------",
         emoji: true,
       },
     });
     data.newJobs.forEach((job) => {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text:
-            `*<${job.href}|${job.title}>*\n*Type*: ${job.location_type}\n*Company*: ${job.company}\n*Department*: ${job.department}\n*Time*: ${job.time}\n*Tags*:` +
-            "`" +
-            job.tags.join("`, `") +
-            "`",
-        },
+      const listTags: any[] = [];
+      job.tags.forEach((tag) => {
+        listTags.push({
+          type: "text",
+          text: tag,
+          style: {
+            code: true,
+          },
+        });
+        listTags.push({
+          type: "text",
+          text: ", ",
+        });
       });
       blocks.push({
-        type: "context",
+        type: "rich_text",
         elements: [
           {
-            type: "image",
-            image_url:
-              "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
-          },
-          {
-            type: "mrkdwn",
-            text: job.address ? job.address : "No address provided",
+            type: "rich_text_quote",
+            elements: [
+              {
+                type: "text",
+                text: "Job role: ",
+                style: {
+                  bold: true,
+                },
+              },
+              {
+                type: "link",
+                url: job.href,
+                text: job.title,
+              },
+              {
+                type: "text",
+                text:
+                  "\n\tType: " +
+                  job.location_type +
+                  "\n\tCompany: " +
+                  job.company +
+                  "\n\tDepartment: " +
+                  job.department +
+                  "\n\tDate added: " +
+                  job.time +
+                  "\n\tTags:  ",
+              },
+              ...listTags.slice(0, -1), // Remove last comma
+            ],
           },
         ],
       });
-      blocks.push(divider);
-    });
-  }
-
-  if (data.updateJobs.length > 0) {
-    blocks.push({
-      type: "header",
-      text: {
-        type: "plain_text",
-        text: "Updated Jobs",
-        emoji: true,
-      },
-    });
-    data.updateJobs.forEach((job) => {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text:
-            `*<${job.href}|${job.title}>*\n*Type*: ${job.location_type}\n*Company*: ${job.company}\n*Department*: ${job.department}\n*Time*: ${job.time}\n*Tags*:` +
-            "`" +
-            job.tags.join("`, `") +
-            "`",
-        },
-      });
-      blocks.push({
-        type: "context",
-        elements: [
-          {
-            type: "image",
-            image_url:
-              "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
-          },
-          {
-            type: "mrkdwn",
-            text: job.address ? job.address : "No address provided",
-          },
-        ],
-      });
-      blocks.push(divider);
-    });
-  }
-
-  if (data.deleteJobs.length > 0) {
-    blocks.push({
-      type: "header",
-      text: {
-        type: "plain_text",
-        text: "Deleted Jobs",
-        emoji: true,
-      },
-    });
-    data.deleteJobs.forEach((job) => {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text:
-            `*<${job.href}|${job.title}>*\n*Type*: ${job.location_type}\n*Company*: ${job.company}\n*Department*: ${job.department}\n*Time*: ${job.time}\n*Tags*:` +
-            "`" +
-            job.tags.join("`, `") +
-            "`",
-        },
-      });
-      blocks.push({
-        type: "context",
-        elements: [
-          {
-            type: "image",
-            image_url:
-              "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
-            alt_text: "Location",
-          },
-          {
-            type: "mrkdwn",
-            text: job.address ? job.address : "No address provided",
-          },
-        ],
-      });
-      blocks.push(divider);
     });
   }
   return blocks;

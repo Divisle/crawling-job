@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { EndorLabsJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildEndorLabsMessage,
+  DefaultJobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class EndorLabsJobScraper {
@@ -118,11 +122,7 @@ export class EndorLabsJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
-      "EndorLabs",
-      "https://www.endorlabs.com/"
-    );
+    const blocks = buildEndorLabsMessage(data);
     return { blocks, channel: 1 };
   }
 
@@ -149,4 +149,8 @@ export class EndorLabsJobScraper {
   }
 }
 
-// EndorLabsJobScraper.run();
+EndorLabsJobScraper.run().then((res) => {
+  if (res.channel !== 0) {
+    buildMessage(1, res.blocks);
+  }
+});
