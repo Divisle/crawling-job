@@ -25,28 +25,13 @@ export function buildNumericJobMessage(data: {
   const blocks: any[] = [];
   if (data.newJobs.length > 0) {
     blocks.push({
-      type: "header",
+      type: "section",
       text: {
-        type: "plain_text",
-        text: "--------------------------------------------------\n:rocket: NEW JOB POSTED @ Numeric :rocket:\n--------------------------------------------------",
-        emoji: true,
+        type: "mrkdwn",
+        text: "*--------------------------------------------------*\n*:rocket: NEW JOB(s) POSTED @ <http://google.com|Numeric> :rocket:*\n*--------------------------------------------------*",
       },
     });
     data.newJobs.forEach((job) => {
-      const listTags: any[] = [];
-      job.tags.forEach((tag) => {
-        listTags.push({
-          type: "text",
-          text: tag,
-          style: {
-            code: true,
-          },
-        });
-        listTags.push({
-          type: "text",
-          text: ", ",
-        });
-      });
       blocks.push({
         type: "rich_text",
         elements: [
@@ -68,17 +53,17 @@ export function buildNumericJobMessage(data: {
               {
                 type: "text",
                 text:
-                  "\n\tType: " +
-                  job.location_type +
-                  "\n\tCompany: " +
-                  job.company +
-                  "\n\tDepartment: " +
-                  job.department +
+                  "\n\tLocation: " +
+                  job.address +
                   "\n\tDate added: " +
                   job.time +
-                  "\n\tTags:  ",
+                  "\n\tCompany Website: ",
               },
-              ...listTags.slice(0, -1), // Remove last comma
+              {
+                type: "link",
+                url: "https://www.numeric.io/",
+                text: "https://www.numeric.io/",
+              },
             ],
           },
         ],
