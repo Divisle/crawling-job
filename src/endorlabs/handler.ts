@@ -67,15 +67,24 @@ export class EndorLabsJobScraper {
         .findElement(By.xpath(".//h3"))
         .getText();
 
-      const listJobElements = await departmentElement.findElements(
-        By.xpath(".//tbody//tr")
+      // Find job elements directly using the department index in the xpath
+      const listJobElements = await this.driver.findElements(
+        By.xpath(
+          `(//div[@class='job-posts--table--department'])[${
+            deptIndex + 1
+          }]//tbody//tr`
+        )
       );
 
       for (let i = 0; i < listJobElements.length; i++) {
-        // Re-find job elements to avoid stale references
-        const currentJobElements = await currentDepartmentElements[
-          deptIndex
-        ].findElements(By.xpath(".//tbody//tr"));
+        // Re-find job elements using absolute xpath to avoid stale references
+        const currentJobElements = await this.driver.findElements(
+          By.xpath(
+            `(//div[@class='job-posts--table--department'])[${
+              deptIndex + 1
+            }]//tbody//tr`
+          )
+        );
 
         if (i >= currentJobElements.length) {
           console.log(
