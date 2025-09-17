@@ -2,7 +2,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { AnomaloJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildJobMessage,
+  DefaultJobMessageData,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class AnomaloJobScraper {
@@ -108,10 +113,16 @@ export class AnomaloJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      title: job.title,
+      location: job.location,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Anomalo",
-      "https://www.anomalo.com"
+      "https://www.anomalo.com",
+      2
     );
     return {
       blocks,
