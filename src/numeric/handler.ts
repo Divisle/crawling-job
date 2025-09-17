@@ -2,7 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { NumericJobRepository } from "./database";
-import { buildNumericJobMessage, NumericJobInterface } from "../template";
+import {
+  buildJobMessage,
+  buildNumericJobMessage,
+  JobMessageData,
+  NumericJobInterface,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class NumericJobScraper {
@@ -114,7 +119,18 @@ export class NumericJobScraper {
     deleteJobs: NumericJobInterface[];
     updateJobs: NumericJobInterface[];
   }) {
-    const blocks = buildNumericJobMessage(messageData);
+    const jobDatas: JobMessageData[] = messageData.newJobs.map((job) => ({
+      location: job.address,
+      title: job.title,
+      href: job.href,
+      dateAdded: job.time,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Numeric",
+      "https://www.numeric.io/",
+      2
+    );
     return { blocks, channel: 2 };
   }
 
