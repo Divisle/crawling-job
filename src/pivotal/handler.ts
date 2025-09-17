@@ -3,7 +3,11 @@ import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { PivotalJobRepository } from "./database";
 import { buildMessage } from "../global";
-import { buildPivotalJobMessage } from "../template";
+import {
+  buildJobMessage,
+  buildPivotalJobMessage,
+  JobMessageData,
+} from "../template";
 
 export class PivotalJobScraper {
   private driver: WebDriver;
@@ -99,7 +103,17 @@ export class PivotalJobScraper {
     deleteJobs: Prisma.PivotalJobCreateInput[];
     updateJobs: Prisma.PivotalJobCreateInput[];
   }) {
-    const blocks = await buildPivotalJobMessage(messageData);
+    const jobDatas: JobMessageData[] = messageData.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Pivotal Partners",
+      "https://pivotalpartners.io",
+      1
+    );
     return { blocks, channel: 1 };
   }
 

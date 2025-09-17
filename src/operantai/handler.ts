@@ -208,7 +208,7 @@ export class OperantaiJobScraper {
       jobDatas,
       "Operantai",
       "https://www.operant.ai/",
-      1
+      2
     );
     return { blocks, channel: 2 };
   }
