@@ -139,10 +139,10 @@ export class NumericJobScraper {
     return await scraper.sendMessage(filteredData);
   }
 }
-NumericJobScraper.run().then((res) => {
-  if (res.blocks.length === 0) {
-    console.log("No job updates found.");
-    process.exit(0);
-  }
-  buildMessage(1, res.blocks);
-});
+// NumericJobScraper.run().then((res) => {
+//   if (res.blocks.length === 0) {
+//     console.log("No job updates found.");
+//     process.exit(0);
+//   }
+//   buildMessage(1, res.blocks);
+// });
