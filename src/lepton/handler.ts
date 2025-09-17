@@ -1,7 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LeptonJobRepository } from "./database";
 import { buildMessage } from "../global";
-import { buildDefault1JobMessage, LeptonApiPayload } from "../template";
+import {
+  buildDefault1JobMessage,
+  buildJobMessage,
+  JobMessageData,
+  LeptonApiPayload,
+} from "../template";
 import axios from "axios";
 export class LeptonJobScraper {
   constructor(private db = new LeptonJobRepository(new PrismaClient())) {
@@ -87,10 +92,16 @@ export class LeptonJobScraper {
     deleteJobs: Prisma.LeptonCreateInput[];
     updateJobs: Prisma.LeptonCreateInput[];
   }) {
-    const blocks = await buildDefault1JobMessage(
-      messageData,
+    const jobDatas: JobMessageData[] = messageData.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Lepton",
-      "https://www.lepton.ai"
+      "https://www.lepton.ai",
+      1
     );
     return { blocks, channel: 2 };
   }
