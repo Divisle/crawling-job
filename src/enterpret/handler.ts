@@ -2,7 +2,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { EnterpretJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildJobMessage,
+  DefaultJobMessageData,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class EnterpretJobScraper {
@@ -114,10 +119,16 @@ export class EnterpretJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Enterpret",
-      "https://www.enterpret.com/"
+      "https://www.enterpret.com/",
+      2
     );
     return { blocks, channel: 2 };
   }
