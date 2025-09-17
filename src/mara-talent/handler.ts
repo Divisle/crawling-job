@@ -101,7 +101,7 @@ export class MaraTalentHandler {
       jobDatas,
       "Mara Talent",
       "https://www.maratalent.co.uk/",
-      1
+      2
     );
     return { blocks, channel: 2 };
   }

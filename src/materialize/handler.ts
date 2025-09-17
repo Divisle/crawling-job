@@ -2,7 +2,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver, until } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { MaterializeJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildJobMessage,
+  DefaultJobMessageData,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class MaterializeJobScraper {
@@ -127,10 +132,16 @@ export class MaterializeJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Materialize",
-      "https://materialize.com/"
+      "https://materialize.com/",
+      1
     );
     return { blocks, channel: 1 };
   }
