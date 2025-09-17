@@ -1,6 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { MaraTalentRepository } from "./database";
-import { buildMaraTalentJobMessage } from "../template";
+import {
+  buildJobMessage,
+  buildMaraTalentJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
@@ -88,7 +92,17 @@ export class MaraTalentHandler {
     updateJobs: Prisma.MaraTalentJobCreateInput[];
     deleteJobs: Prisma.MaraTalentJobCreateInput[];
   }) {
-    const blocks = buildMaraTalentJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Mara Talent",
+      "https://www.maratalent.co.uk/",
+      1
+    );
     return { blocks, channel: 2 };
   }
 
