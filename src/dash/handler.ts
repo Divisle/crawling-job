@@ -104,7 +104,7 @@ export class DashJobHandler {
       jobDatas,
       "Dash0",
       "https://www.dash0.com/",
-      2
+      1
     );
     return {
       blocks,

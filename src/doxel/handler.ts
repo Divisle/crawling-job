@@ -1,6 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { DoxelJobRepository } from "./database";
-import { buildLeverJobMessage } from "../template";
+import {
+  buildJobMessage,
+  buildLeverJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
@@ -106,7 +110,12 @@ export class DoxelJobHandler {
     updateJobs: Prisma.DoxelJobCreateInput[];
     deleteJobs: Prisma.DoxelJobCreateInput[];
   }) {
-    const blocks = buildLeverJobMessage(data, "Doxel", "https://doxel.com/");
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(jobDatas, "Doxel", "https://doxel.com/", 1);
     return {
       blocks,
       channel: 1,
