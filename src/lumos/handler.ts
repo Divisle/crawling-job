@@ -1,7 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LumosJobRepository } from "./database";
 import { buildMessage } from "../global";
-import { buildDefault1JobMessage, LumosApiPayload } from "../template";
+import {
+  buildDefault1JobMessage,
+  buildJobMessage,
+  JobMessageData,
+  LumosApiPayload,
+} from "../template";
 import axios from "axios";
 export class LumosJobScraper {
   constructor(private db = new LumosJobRepository(new PrismaClient())) {
@@ -62,10 +67,16 @@ export class LumosJobScraper {
     deleteJobs: Prisma.LumosJobCreateInput[];
     updateJobs: Prisma.LumosJobCreateInput[];
   }) {
-    const blocks = await buildDefault1JobMessage(
-      messageData,
+    const jobDatas: JobMessageData[] = messageData.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Lumos",
-      "https://www.lumos.ai"
+      "https://www.lumos.ai",
+      1
     );
     return { blocks, channel: 1 };
   }
