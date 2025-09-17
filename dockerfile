@@ -68,7 +68,9 @@ RUN mkdir -p /var/log \
     && echo "0 9 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
     # Run at 16h UTC (17h UK time)
     && echo "0 16 * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
-    # Test cron job running every 10 minutes (for debugging, comment out the two lines above and uncomment the line below)
+    # Test cron job running every 30 minutes
+    && echo "*/30 * * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
+    # Final: run every 10 minutes for testing purposes
     # && echo "*/10 * * * * root cd /app && /usr/local/bin/node /app/node_modules/.bin/ts-node main.ts >> /var/log/cron.log 2>&1" >> /etc/cron.d/crawling-job \
     && chmod 0644 /etc/cron.d/crawling-job \
     && crontab /etc/cron.d/crawling-job \
