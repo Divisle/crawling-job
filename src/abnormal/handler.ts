@@ -2,7 +2,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { AbnormalJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildJobMessage,
+  DefaultJobMessageData,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class AbnormalJobScraper {
@@ -109,10 +114,16 @@ export class AbnormalJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
+    const jobMessage: JobMessageData[] = data.newJobs.map((job) => ({
+      title: job.title,
+      location: job.location,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobMessage,
       "Abnormal",
-      "http://abnormalsecurity.com"
+      "https://abnormal.ai",
+      1
     );
     return {
       blocks,
