@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { LegionJobRepository } from "./database";
-import { buildLegionJobMessage } from "../template";
+import {
+  buildJobMessage,
+  buildLegionJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class LegionJobScraper {
@@ -111,7 +115,17 @@ export class LegionJobScraper {
     updateJobs: Prisma.LegionJobCreateInput[];
     deleteJobs: Prisma.LegionJobCreateInput[];
   }) {
-    const blocks = buildLegionJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Legion Security",
+      "https://www.legionsecurity.ai/",
+      1
+    );
     return { blocks, channel: 1 };
   }
 
