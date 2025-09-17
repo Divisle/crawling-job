@@ -101,7 +101,7 @@ export class LeptonJobScraper {
       jobDatas,
       "Lepton",
       "https://www.lepton.ai",
-      1
+      2
     );
     return { blocks, channel: 2 };
   }

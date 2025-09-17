@@ -1,7 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import {
   buildGreenhouseDepartmentMessage,
+  buildJobMessage,
   GreenhouseDepartmentApiPayLoad,
+  JobMessageData,
 } from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
@@ -68,10 +70,16 @@ export class LoopJobHandler {
     updateJobs: Prisma.LoopJobCreateInput[];
     deleteJobs: Prisma.LoopJobCreateInput[];
   }) {
-    const blocks = buildGreenhouseDepartmentMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Loop",
-      "https://www.loop.com/"
+      "https://www.loop.com/",
+      1
     );
     return { blocks, channel: 1 };
   }
