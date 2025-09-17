@@ -2,7 +2,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { FormantJobRepository } from "./database";
-import { buildDefaultJobMessage, DefaultJobMessageData } from "../template";
+import {
+  buildDefaultJobMessage,
+  buildJobMessage,
+  DefaultJobMessageData,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class FormantJobScraper {
@@ -105,10 +110,16 @@ export class FormantJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Formant",
-      "https://formant.io/"
+      "https://formant.io/",
+      1
     );
     return { blocks, channel: 1 };
   }
