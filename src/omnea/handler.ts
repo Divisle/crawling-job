@@ -1,6 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { OmneaRepository } from "./database";
-import { buildAshbyhqMessage, AshbyhqApiPayload } from "../template";
+import {
+  buildAshbyhqMessage,
+  AshbyhqApiPayload,
+  buildJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
 export class OmneaJobHandler {
@@ -67,10 +72,16 @@ export class OmneaJobHandler {
     deleteJobs: Prisma.OmneaJobCreateInput[];
     updateJobs: Prisma.OmneaJobCreateInput[];
   }) {
-    const blocks = await buildAshbyhqMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Omnea",
-      "https://www.omnea.co/"
+      "https://www.omnea.co/",
+      1
     );
     return { blocks, channel: 1 };
   }
