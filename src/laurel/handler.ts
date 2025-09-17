@@ -1,6 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { LaurelRepository } from "./database";
-import { buildAshbyhqMessage, AshbyhqApiPayload } from "../template";
+import {
+  buildAshbyhqMessage,
+  AshbyhqApiPayload,
+  buildJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
 export class LaurelJobHandler {
@@ -66,10 +71,16 @@ export class LaurelJobHandler {
     deleteJobs: Prisma.LaurelJobCreateInput[];
     updateJobs: Prisma.LaurelJobCreateInput[];
   }) {
-    const blocks = await buildAshbyhqMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Laurel",
-      "https://www.laurel.ai/"
+      "https://www.laurel.ai/",
+      1
     );
     return { blocks, channel: 1 };
   }
