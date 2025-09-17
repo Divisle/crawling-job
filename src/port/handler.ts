@@ -2,7 +2,9 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { PortJobRepository } from "./database";
 import {
   buildDefaultJobMessage,
+  buildJobMessage,
   DefaultJobMessageData,
+  JobMessageData,
   PortApiPayload,
 } from "../template";
 import { buildMessage } from "../global";
@@ -86,7 +88,12 @@ export class PortJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildDefaultJobMessage(data, "Port", "https://www.port.io");
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(jobDatas, "Port", "https://www.port.io", 1);
     return { blocks, channel: 1 };
   }
 
