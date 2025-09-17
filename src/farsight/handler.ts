@@ -2,9 +2,11 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { FarSightRepository } from "./database";
 import {
   buildFarSightJobsMessage,
+  buildJobMessage,
   FarSightApiPayload,
   // buildFarSightPostMessage,
   FarSightJobInterface,
+  JobMessageData,
 } from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
@@ -60,7 +62,17 @@ export class FarSightJobHandler {
     deleteJobs: FarSightJobInterface[];
     updateJobs: FarSightJobInterface[];
   }) {
-    const blocks = buildFarSightJobsMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.locations.map((loc) => loc.locationName).join(", "),
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Farsight AI",
+      "https://farsight-ai.com/",
+      1
+    );
     return { blocks, channel: 1 };
   }
 
