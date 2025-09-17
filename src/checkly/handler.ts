@@ -4,6 +4,8 @@ import {
   AshbyhqPostApiPayload,
   buildAshbyhqPostMessage,
   AshbyhqPostInterface,
+  JobMessageData,
+  buildJobMessage,
 } from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
@@ -92,10 +94,16 @@ export class ChecklyJobHandler {
     deleteJobs: AshbyhqPostInterface[];
     updateJobs: AshbyhqPostInterface[];
   }) {
-    const blocks = await buildAshbyhqPostMessage(
-      data,
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
       "Checkly",
-      "https://www.checklyhq.com"
+      "https://www.checklyhq.com",
+      1
     );
     return {
       blocks,
