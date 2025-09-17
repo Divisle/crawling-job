@@ -4,6 +4,8 @@ import {
   buildAshbyhqMessage,
   AshbyhqApiPayload,
   IoApiPayload,
+  buildJobMessage,
+  JobMessageData,
 } from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
@@ -66,7 +68,12 @@ export class IoJobHandler {
     deleteJobs: Prisma.IoJobCreateInput[];
     updateJobs: Prisma.IoJobCreateInput[];
   }) {
-    const blocks = await buildAshbyhqMessage(data, "Io", "https://io.net/");
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(jobDatas, "Io", "https://io.net/", 1);
     return { blocks, channel: 1 };
   }
 
