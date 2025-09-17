@@ -1,6 +1,8 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import {
+  buildJobMessage,
   buildRecruitmentJobMessage,
+  JobMessageData,
   RecruitmentApiPayload,
   RecruitmentTokenPayload,
 } from "../template";
@@ -77,7 +79,17 @@ export class RecruitmentJobHandler {
     updateJobs: Prisma.RecruitmentJobCreateInput[];
     deleteJobs: Prisma.RecruitmentJobCreateInput[];
   }) {
-    const blocks = buildRecruitmentJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Recruitment People",
+      "https://www.recruitmentpeople.io",
+      1
+    );
     return { blocks, channel: 1 };
   }
   static async run() {
