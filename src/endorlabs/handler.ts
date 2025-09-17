@@ -5,7 +5,9 @@ import { EndorLabsJobRepository } from "./database";
 import {
   buildDefaultJobMessage,
   buildEndorLabsMessage,
+  buildJobMessage,
   DefaultJobMessageData,
+  JobMessageData,
 } from "../template";
 import { buildMessage } from "../global";
 
@@ -149,7 +151,17 @@ export class EndorLabsJobScraper {
   }
 
   async sendMessage(data: DefaultJobMessageData) {
-    const blocks = buildEndorLabsMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Endor Labs",
+      "https://www.endorlabs.com/",
+      1
+    );
     return { blocks, channel: 1 };
   }
 
