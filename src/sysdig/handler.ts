@@ -1,83 +1,90 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { SysdigJobRepository } from "./database";
-import { buildLeverJobMessage, LeverApiPayload } from "../template";
-import { buildMessage } from "../global";
+import { buildJobMessage, JobMessageData, LeverApiPayload } from "../template";
 import axios from "axios";
 
 export class SysdigJobHandler {
-  constructor(private db = new SysdigJobRepository(new PrismaClient())) {
-    if (!process.env.SLACK_BOT_TOKEN) {
-      console.log("SLACK_BOT_TOKEN is not defined");
-      return process.exit(1);
-    }
-    if (!process.env.SLACK_FIRST_CHANNEL_ID) {
-      console.log("SLACK_FIRST_CHANNEL_ID is not defined");
-      return process.exit(1);
-    }
-  }
+	constructor(private db = new SysdigJobRepository(new PrismaClient())) {
+		if (!process.env.SLACK_BOT_TOKEN) {
+			console.log("SLACK_BOT_TOKEN is not defined");
+			return process.exit(1);
+		}
+		if (!process.env.SLACK_FIRST_CHANNEL_ID) {
+			console.log("SLACK_FIRST_CHANNEL_ID is not defined");
+			return process.exit(1);
+		}
+	}
 
-  async scrapeJobs(): Promise<Prisma.SysdigJobCreateInput[]> {
-    const data: Prisma.SysdigJobCreateInput[] = [];
-    const respond: {
-      data: LeverApiPayload[];
-    } = await axios.get(
-      "https://api.lever.co/v0/postings/sysdig?mode=json&limit=100&skip=0"
-    );
-    for (const job of respond.data) {
-      data.push({
-        title: job.text,
-        location: job.categories.location,
-        department: job.categories.department,
-        workplaceType: job.workplaceType,
-        employmentType: job.categories.commitment
-          ? job.categories.commitment
-          : null,
-        group: job.categories.team,
-        href: job.hostedUrl,
-      });
-    }
-    return data;
-  }
+	async scrapeJobs(): Promise<Prisma.SysdigJobCreateInput[]> {
+		const data: Prisma.SysdigJobCreateInput[] = [];
+		const respond: {
+			data: LeverApiPayload[];
+		} = await axios.get(
+			"https://api.lever.co/v0/postings/sysdig?mode=json&limit=100&skip=0",
+		);
+		for (const job of respond.data) {
+			data.push({
+				title: job.text,
+				location: job.categories.location,
+				department: job.categories.department,
+				workplaceType: job.workplaceType,
+				employmentType: job.categories.commitment
+					? job.categories.commitment
+					: null,
+				group: job.categories.team,
+				href: job.hostedUrl,
+			});
+		}
+		return data;
+	}
 
-  async filterData(data: Prisma.SysdigJobCreateInput[]) {
-    const filteredData = await this.db.compareData(data);
-    const listDeleteId = [
-      ...filteredData.deleteJobs.map((job) => job.id as string),
-      ...filteredData.updateJobs.map((job) => job.id as string),
-    ];
-    const listCreateData = [
-      ...filteredData.newJobs,
-      ...filteredData.updateJobs.map((job) => {
-        const { id, ...jobData } = job;
-        return jobData;
-      }),
-    ];
-    await this.db.deleteMany(listDeleteId);
-    await this.db.createMany(listCreateData);
-    return filteredData;
-  }
+	async filterData(data: Prisma.SysdigJobCreateInput[]) {
+		const filteredData = await this.db.compareData(data);
+		const listDeleteId = [
+			...filteredData.deleteJobs.map((job) => job.id as string),
+			...filteredData.updateJobs.map((job) => job.id as string),
+		];
+		const listCreateData = [
+			...filteredData.newJobs,
+			...filteredData.updateJobs.map((job) => {
+				const { id, ...jobData } = job;
+				return jobData;
+			}),
+		];
+		await this.db.deleteMany(listDeleteId);
+		await this.db.createMany(listCreateData);
+		return filteredData;
+	}
 
-  async sendMessage(data: {
-    newJobs: Prisma.SysdigJobCreateInput[];
-    updateJobs: Prisma.SysdigJobCreateInput[];
-    deleteJobs: Prisma.SysdigJobCreateInput[];
-  }) {
-    const blocks = buildLeverJobMessage(data, "Sysdig", "https://sysdig.com/");
-    return { blocks, channel: 1 };
-  }
+	async sendMessage(data: {
+		newJobs: Prisma.SysdigJobCreateInput[];
+		updateJobs: Prisma.SysdigJobCreateInput[];
+		deleteJobs: Prisma.SysdigJobCreateInput[];
+	}) {
+		const jobs: JobMessageData[] = data.newJobs.map((jobData) => {
+			return {
+				location: jobData.location,
+				title: jobData.title,
+				href: jobData.href,
+			};
+		});
 
-  static async run() {
-    const handler = new SysdigJobHandler();
-    const jobData = await handler.scrapeJobs();
-    const filteredData = await handler.filterData(jobData);
-    if (
-      filteredData.newJobs.length === 0 &&
-      filteredData.updateJobs.length === 0 &&
-      filteredData.deleteJobs.length === 0
-    ) {
-      console.log("No job changes detected.");
-      return { blocks: [] as any[], channel: 0 };
-    }
-    return await handler.sendMessage(filteredData);
-  }
+		const blocks = buildJobMessage(jobs, "Sysdig", "https://sysdig.com/", 1);
+		return { blocks, channel: 1 };
+	}
+
+	static async run() {
+		const handler = new SysdigJobHandler();
+		const jobData = await handler.scrapeJobs();
+		const filteredData = await handler.filterData(jobData);
+		if (
+			filteredData.newJobs.length === 0 &&
+			filteredData.updateJobs.length === 0 &&
+			filteredData.deleteJobs.length === 0
+		) {
+			console.log("No job changes detected.");
+			return { blocks: [] as any[], channel: 0 };
+		}
+		return await handler.sendMessage(filteredData);
+	}
 }
