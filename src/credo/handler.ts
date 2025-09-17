@@ -1,6 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { CredoJobRepository } from "./database";
-import { buildCredoJobMessage, AshbyhqPostApiPayload } from "../template";
+import {
+  buildCredoJobMessage,
+  AshbyhqPostApiPayload,
+  buildJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
 export class CredoJobHandler {
@@ -87,7 +92,17 @@ export class CredoJobHandler {
     deleteJobs: Prisma.CredoJobCreateInput[];
     updateJobs: Prisma.CredoJobUpdateInput[];
   }) {
-    const blocks = await buildCredoJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Credo",
+      "https://www.credo.ai",
+      2
+    );
     return {
       blocks,
       channel: 2,

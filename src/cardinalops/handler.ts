@@ -2,7 +2,11 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
 import { CardinalopsJobRepository } from "./database";
-import { buildCardinalopsJobMessage } from "../template";
+import {
+  buildCardinalopsJobMessage,
+  buildJobMessage,
+  JobMessageData,
+} from "../template";
 import { buildMessage } from "../global";
 
 export class CardinalopsJobScraper {
@@ -125,7 +129,17 @@ export class CardinalopsJobScraper {
     updateJobs: Prisma.CardinalopsJobCreateInput[];
     deleteJobs: Prisma.CardinalopsJobCreateInput[];
   }) {
-    const blocks = buildCardinalopsJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      title: job.title,
+      location: job.meta,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "CardinalOps",
+      "https://cardinalops.com",
+      1
+    );
     return {
       blocks,
       channel: 1,
