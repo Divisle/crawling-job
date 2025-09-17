@@ -4,6 +4,8 @@ import {
   AshbyhqPostApiPayload,
   buildAshbyhqPostMessage,
   AshbyhqPostInterface,
+  buildJobMessage,
+  JobMessageData,
 } from "../template";
 import { buildMessage } from "../global";
 import axios from "axios";
@@ -92,10 +94,16 @@ export class FluidStackJobHandler {
     deleteJobs: AshbyhqPostInterface[];
     updateJobs: AshbyhqPostInterface[];
   }) {
-    const blocks = await buildAshbyhqPostMessage(
-      data,
-      "FluidStack",
-      "https://www.fluidstack.io/"
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Fluid Stack",
+      "https://www.fluidstack.io/",
+      1
     );
     return { blocks, channel: 1 };
   }
