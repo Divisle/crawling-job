@@ -40,22 +40,49 @@ export class EndorLabsJobScraper {
 
   async scrapeJobs(): Promise<Prisma.EndorLabsJobCreateInput[]> {
     await this.driver.get("https://job-boards.greenhouse.io/endorlabs");
-    // this.driver.manage().setTimeouts({ implicit: 5000 });
     const departmentElements = await this.driver.findElements(
       By.xpath("//div[@class='job-posts--table--department']")
     );
     const jobData: Prisma.EndorLabsJobCreateInput[] = [];
-    for (const departmentElement of departmentElements) {
+
+    for (
+      let deptIndex = 0;
+      deptIndex < departmentElements.length;
+      deptIndex++
+    ) {
+      // Re-find department elements to avoid stale references
+      const currentDepartmentElements = await this.driver.findElements(
+        By.xpath("//div[@class='job-posts--table--department']")
+      );
+
+      if (deptIndex >= currentDepartmentElements.length) {
+        console.log(`Department ${deptIndex} no longer exists, skipping`);
+        continue;
+      }
+
+      const departmentElement = currentDepartmentElements[deptIndex];
       const department = await departmentElement
         .findElement(By.xpath(".//h3"))
         .getText();
-      const listJobElements = (
-        await departmentElement.findElements(By.xpath(".//tbody//tr"))
-      ).length;
-      for (let i = 0; i < listJobElements; i++) {
-        const jobElement = (
-          await departmentElement.findElements(By.xpath(".//tbody//tr"))
-        )[i];
+
+      const listJobElements = await departmentElement.findElements(
+        By.xpath(".//tbody//tr")
+      );
+
+      for (let i = 0; i < listJobElements.length; i++) {
+        // Re-find job elements to avoid stale references
+        const currentJobElements = await currentDepartmentElements[
+          deptIndex
+        ].findElements(By.xpath(".//tbody//tr"));
+
+        if (i >= currentJobElements.length) {
+          console.log(
+            `Job ${i} in department ${deptIndex} no longer exists, skipping`
+          );
+          continue;
+        }
+
+        const jobElement = currentJobElements[i];
         const href = await jobElement
           .findElement(By.xpath(".//a"))
           .getAttribute("href");
@@ -149,8 +176,9 @@ export class EndorLabsJobScraper {
   }
 }
 
-EndorLabsJobScraper.run().then((res) => {
-  if (res.channel !== 0) {
-    buildMessage(1, res.blocks);
-  }
-});
+// EndorLabsJobScraper.run();
+// // .then((res) => {
+// //   if (res.channel !== 0) {
+// //     buildMessage(1, res.blocks);
+// //   }
+// // });
