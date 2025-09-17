@@ -3,7 +3,11 @@ import { DashJobRepository } from "./database";
 import { buildMessage } from "../global";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
-import { buildDashJobMessage } from "../template";
+import {
+  buildDashJobMessage,
+  buildJobMessage,
+  JobMessageData,
+} from "../template";
 
 export class DashJobHandler {
   private driver: WebDriver;
@@ -91,7 +95,17 @@ export class DashJobHandler {
     updateJobs: Prisma.DashJobCreateInput[];
     deleteJobs: Prisma.DashJobCreateInput[];
   }) {
-    const blocks = buildDashJobMessage(data);
+    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+      location: job.location,
+      title: job.title,
+      href: job.href,
+    }));
+    const blocks = buildJobMessage(
+      jobDatas,
+      "Dash0",
+      "https://www.dash0.com/",
+      2
+    );
     return {
       blocks,
       channel: 1,
