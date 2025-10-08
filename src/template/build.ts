@@ -1,4 +1,5 @@
 export interface JobMessageData {
+  id?: string;
   location: string;
   title: string;
   href: string;
