@@ -1,11 +1,11 @@
 import { BlinkOpsJob, Prisma, PrismaClient } from "@prisma/client";
-import { BlinkOpsRepository } from "./database";
+import { BynderJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class BlinkOpsJobHandler {
-  constructor(private db = new BlinkOpsRepository(new PrismaClient())) {
+export class BynderJobHandler {
+  constructor(private db = new BynderJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,27 +16,40 @@ export class BlinkOpsJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.BlinkOpsJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.BynderJobCreateInput[]> {
     try {
       const response: {
-        data: {
-          name: string;
-          location: {
-            name: string;
-          };
-          url_active_page: string;
-        }[];
+        data: string;
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/C7.004/positions?token=7C42E981F101F10365C174C2E98F88F880"
+        "https://careers.bynder.com/greenhouse.php?fq=facet_department:(Catering%3BCustomer%20Success%20%26%20Support%3BOnboarding%3BDesign%3BEngineering%3BFinance%3BInformation%20Security%3BInfosec%3BHuman%20Resources%3BLegal%3BMarketing%3BOffice%20Management%3BOperations%3BPeople%20%26%20Talent%3BProcurement%3BProduct%3BProduct%20Management%3BProject%20Management%3BSales%3BSolutions%3BIT%20Department%3BCustomer%20Onboarding%20Intern%3BCustomer%20Success%20Intern%3BDesign%20Intern%3BEngineering%20Intern%3BFinance%20Intern%3BG%26A%3BR%26D%3BR%26D%20Product%3BR%26D%20Engineering)&callback=jQuery400207932597033434694_1759980460591&_=1759980460592"
       );
-      const data: Prisma.BlinkOpsJobCreateInput[] = response.data.map(
-        (job) => ({
-          title: job.name,
-          location: job.location?.name || "No Location",
-          href: job.url_active_page,
-        })
+      const jobData: {
+        results: {
+          [key: string]: {
+            location: string;
+            vacancyName: string;
+            jobVacancyId: string;
+            urlJobName: string;
+          };
+        };
+      } = JSON.parse(
+        response.data.substring(
+          response.data.indexOf("(") + 1,
+          response.data.lastIndexOf(")")
+        )
       );
-      console.log(`Scraped ${data.length} jobs from BlinkOps`);
+      const data: Prisma.BynderJobCreateInput[] = Object.values(
+        jobData.results
+      ).map((job) => ({
+        title: job.vacancyName,
+        location: job.location,
+        href:
+          "https://careers.bynder.com/openings/" +
+          job.jobVacancyId +
+          "-" +
+          job.urlJobName,
+      }));
+      console.log(`Scraped ${data.length} jobs from Bynder`);
       console.log(data);
       return data;
     } catch (error) {
@@ -46,7 +59,7 @@ export class BlinkOpsJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.BlinkOpsJobCreateInput[]
+    jobData: Prisma.BynderJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,8 +90,8 @@ export class BlinkOpsJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "BlinkOps",
-      "https://www.blinkops.com/",
+      "Bynder",
+      "https://www.bynder.com/",
       1
     );
     return {
@@ -88,7 +101,7 @@ export class BlinkOpsJobHandler {
   }
 
   static async run() {
-    const handler = new BlinkOpsJobHandler();
+    const handler = new BynderJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,8 +112,8 @@ export class BlinkOpsJobHandler {
   }
 }
 
-// BlinkOpsJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+BynderJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});

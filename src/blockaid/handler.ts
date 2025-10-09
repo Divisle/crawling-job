@@ -134,6 +134,6 @@ export class BlockaidScraper {
   }
 }
 
-BlockaidScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// BlockaidScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });
