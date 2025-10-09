@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { CastAIJobRepository } from "./database";
+import { ChainguardJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class CastAIJobHandler {
-  constructor(private db = new CastAIJobRepository(new PrismaClient())) {
+export class ChainguardJobHandler {
+  constructor(private db = new ChainguardJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,23 +16,29 @@ export class CastAIJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.CastAIJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ChainguardJobCreateInput[]> {
     try {
       const response: {
         data: {
-          title: string;
-          absolute_url: string;
-          location: string;
-        }[];
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
+              name: string;
+            };
+          }[];
+        };
       } = await axios.get(
-        "https://cast.ai/wp-json/greenhouse/v1/jobs?no_cache=true"
+        "https://boards-api.greenhouse.io/v1/boards/chainguard/jobs"
       );
-      const data: Prisma.CastAIJobCreateInput[] = response.data.map((job) => ({
-        title: job.title,
-        location: job.location || "No Location",
-        href: job.absolute_url,
-      }));
-      console.log(`Scraped ${data.length} jobs from CastAI`);
+      const data: Prisma.ChainguardJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
+        })
+      );
+      console.log(`Scraped ${data.length} jobs from Chainguard`);
       console.log(data);
       return data;
     } catch (error) {
@@ -42,7 +48,7 @@ export class CastAIJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.CastAIJobCreateInput[]
+    jobData: Prisma.ChainguardJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -71,7 +77,12 @@ export class CastAIJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "CastAI", "https://cast.ai/", 1);
+    const blocks = buildJobMessage(
+      data,
+      "Chainguard",
+      "https://www.chainguard.dev/",
+      1
+    );
     return {
       blocks,
       channel: 1,
@@ -79,7 +90,7 @@ export class CastAIJobHandler {
   }
 
   static async run() {
-    const handler = new CastAIJobHandler();
+    const handler = new ChainguardJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -90,7 +101,7 @@ export class CastAIJobHandler {
   }
 }
 
-// CastAIJobHandler.run().then((res) => {
+// ChainguardJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
