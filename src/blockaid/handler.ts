@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver, until } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
-import { GetbalanceJobRepository } from "./database";
+import { BlockaidJobRepository } from "./database";
 import { buildJobMessage, JobMessageData } from "../template";
 import { buildMessage } from "../global";
 
-export class GetbalanceScraper {
+export class BlockaidScraper {
   private driver: WebDriver;
 
-  constructor(private db = new GetbalanceJobRepository(new PrismaClient())) {
+  constructor(private db = new BlockaidJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -40,38 +40,37 @@ export class GetbalanceScraper {
     this.driver.manage().setTimeouts({ implicit: 10000, pageLoad: 30000 });
   }
 
-  async scrapeJobs(): Promise<Prisma.GetbalanceJobCreateInput[]> {
-    await this.driver.get("https://www.getbalance.com/careers/");
+  async scrapeJobs(): Promise<Prisma.BlockaidJobCreateInput[]> {
+    await this.driver.get("https://www.comeet.com/jobs/blockaid/69.00b");
     // Wait for the page to load completely
     await this.driver.sleep(3000);
 
     // Wait for job sections to be present with explicit wait
     console.log("Waiting for job sections to load...");
     await this.driver.wait(
-      until.elementsLocated(By.xpath("//a[@class='comeet-position']")),
+      until.elementsLocated(By.xpath(".//a[@class='positionItem']")),
       15000
     );
 
     // Additional wait to ensure all content is loaded
     await this.driver.sleep(2000);
     const jobElements = await this.driver.findElements(
-      By.xpath("//a[@class='comeet-position']")
+      By.xpath(".//a[@class='positionItem']")
     );
-    let jobData: Prisma.GetbalanceJobCreateInput[] = [];
+    let jobData: Prisma.BlockaidJobCreateInput[] = [];
     for (let i = 0; i < jobElements.length; i++) {
       try {
         const jobElements = await this.driver.findElements(
-          By.xpath("//a[@class='comeet-position']")
+          By.xpath(".//a[@class='positionItem']")
         );
         const jobElement = jobElements[i];
         const href = await jobElement.getAttribute("href");
         const title = await jobElement
-          .findElement(By.xpath("div[@class='comeet-position-name']"))
+          .findElement(By.xpath(".//span[@class='positionTitle']"))
           .getText();
-        const meta = await jobElement
-          .findElement(By.xpath("div[@class='comeet-position-meta']"))
+        const location = await jobElement
+          .findElement(By.xpath(".//i[@class='fa fa-map-marker']//.."))
           .getText();
-        const location = meta.split("·")[0].trim() || "No Location";
         jobData.push({
           title,
           location,
@@ -82,13 +81,13 @@ export class GetbalanceScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from GetBalance.`);
+    console.log(`Scraped ${jobData.length} jobs from Blockaid.`);
     console.log(jobData);
     return jobData;
   }
 
   async filterData(
-    jobData: Prisma.GetbalanceJobCreateInput[]
+    jobData: Prisma.BlockaidJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -110,15 +109,15 @@ export class GetbalanceScraper {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "GetBalance",
-      "https://www.getbalance.com",
+      "Blockaid",
+      "https://www.blockaid.io/",
       1
     );
     return { blocks, channel: 1 };
   }
 
   static async run() {
-    const scraper = new GetbalanceScraper();
+    const scraper = new BlockaidScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
     if (filteredData.length === 0) {
@@ -135,6 +134,6 @@ export class GetbalanceScraper {
   }
 }
 
-// GetbalanceScraper.run().then((result) => {
-//   buildMessage(result.channel, result.blocks);
-// });
+BlockaidScraper.run().then((result) => {
+  buildMessage(result.channel, result.blocks);
+});
