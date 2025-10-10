@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Builder, By, WebDriver, until } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome.js";
-import { DeepsetJobRepository } from "./database";
+import { FactoryJobRepository } from "./database";
 import { buildJobMessage, JobMessageData } from "../template";
 import { buildMessage } from "../global";
 
-export class DeepsetScraper {
+export class FactoryScraper {
   private driver: WebDriver;
 
-  constructor(private db = new DeepsetJobRepository(new PrismaClient())) {
+  constructor(private db = new FactoryJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -40,64 +40,76 @@ export class DeepsetScraper {
     this.driver.manage().setTimeouts({ implicit: 10000, pageLoad: 30000 });
   }
 
-  async scrapeJobs(): Promise<Prisma.DeepsetJobCreateInput[]> {
-    await this.driver.get("https://www.deepset.ai/careers");
+  async scrapeJobs(): Promise<Prisma.FactoryJobCreateInput[]> {
+    await this.driver.get("https://factory.ai/company#careers");
     // Wait for the page to load completely
     await this.driver.sleep(3000);
 
     // Wait for job sections to be present with explicit wait
     console.log("Waiting for job sections to load...");
     await this.driver.wait(
-      until.elementsLocated(
-        By.xpath(".//div[@class='c-careers-listings_item w-dyn-item']")
-      ),
+      until.elementsLocated(By.xpath("//button[@title='Next page']")),
       15000
     );
 
     // Additional wait to ensure all content is loaded
     await this.driver.sleep(2000);
-    const jobElements = await this.driver.findElements(
-      By.xpath(".//div[@class='c-careers-listings_item w-dyn-item']")
-    );
-    let jobData: Prisma.BlockaidJobCreateInput[] = [];
-    for (let i = 0; i < jobElements.length; i++) {
-      try {
-        const jobElements = await this.driver.findElements(
-          By.xpath(".//div[@class='c-careers-listings_item w-dyn-item']")
-        );
-        const jobElement = jobElements[i];
-        const href = await jobElement
-          .findElement(By.xpath(".//a"))
-          .getAttribute("href");
-        const title = await jobElement.findElement(By.xpath(".//h2")).getText();
-        const locationElements = await jobElement.findElements(
-          By.xpath(
-            ".//div[@class='c-careers-listings_item_text-cols']//div[@role='listitem']//div[@class='c-text-3']"
-          )
-        );
-        const location =
-          locationElements.length > 0
-            ? (
-                await Promise.all(locationElements.map((el) => el.getText()))
-              ).join("; ")
-            : "N/A";
-        jobData.push({
-          title,
-          location,
-          href,
-        });
-      } catch (error) {
-        console.error(`Error fetching job element at index ${i}:`, error);
+
+    let jobData: Prisma.FactoryJobCreateInput[] = [];
+    // While button is not disabled
+    while (true) {
+      const jobElements = await this.driver.findElements(
+        By.xpath("//section[@id='careers']//ul//a")
+      );
+      // Scroll to bottom to load all jobs, scroll slowly to ensure all jobs are loaded
+      await this.driver.executeScript(
+        "window.scrollTo(0, document.body.scrollHeight);"
+      );
+      await this.driver.sleep(2000);
+      for (let i = 0; i < jobElements.length; i++) {
+        try {
+          const jobElement = (
+            await this.driver.findElements(
+              By.xpath("//section[@id='careers']//ul//a")
+            )
+          )[i];
+          const meta = await jobElement.findElements(
+            By.xpath(".//div[@class='flex flex-col gap-2']//p")
+          );
+          const title = meta[0] ? await meta[0].getText() : "No title";
+          const location = meta[1]
+            ? (await meta[1].getText()).split("-")[0].trim()
+            : "No location";
+          const href = await jobElement.getAttribute("href");
+          jobData.push({
+            title,
+            location,
+            href,
+          });
+        } catch (error) {
+          console.error("Error scraping a job element:", error);
+        }
+      }
+      const nextButton = await this.driver.findElement(
+        By.xpath(".//button[@title='Next page']")
+      );
+      if (
+        ((await nextButton.isEnabled()) && (await nextButton.isDisplayed())) ===
+        false
+      ) {
         break;
+      } else {
+        await this.driver.executeScript("arguments[0].click();", nextButton);
+        await this.driver.sleep(1000);
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Deepset.`);
+    console.log(`Scraped ${jobData.length} jobs from Factory.`);
     console.log(jobData);
     return jobData;
   }
 
   async filterData(
-    jobData: Prisma.DeepsetJobCreateInput[]
+    jobData: Prisma.FactoryJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -117,12 +129,12 @@ export class DeepsetScraper {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Deepset", "https://deepset.ai/", 1);
+    const blocks = buildJobMessage(data, "Factory", "https://factory.ai/", 1);
     return { blocks, channel: 1 };
   }
 
   static async run() {
-    const scraper = new DeepsetScraper();
+    const scraper = new FactoryScraper();
     const jobData = await scraper.scrapeJobs();
     const filteredData = await scraper.filterData(jobData);
     if (filteredData.length === 0) {
@@ -139,6 +151,6 @@ export class DeepsetScraper {
   }
 }
 
-// DeepsetScraper.run().then((result) => {
-//   buildMessage(result.channel, result.blocks);
-// });
+FactoryScraper.run().then((result) => {
+  buildMessage(result.channel, result.blocks);
+});
