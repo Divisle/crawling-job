@@ -1,11 +1,11 @@
-import { BlinkOpsJob, Prisma, PrismaClient } from "@prisma/client";
-import { BlinkOpsRepository } from "./database";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { IslandJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class BlinkOpsJobHandler {
-  constructor(private db = new BlinkOpsRepository(new PrismaClient())) {
+export class IslandJobHandler {
+  constructor(private db = new IslandJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class BlinkOpsJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.BlinkOpsJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.IslandJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -27,16 +27,14 @@ export class BlinkOpsJobHandler {
           url_active_page: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/09.00A/positions?token=90A363C515A03F4601B1E2D32515A2D32"
+        "https://www.comeet.co/careers-api/2.0/company/C7.004/positions?token=7C42E981F101F10365C174C2E98F88F880"
       );
-      const data: Prisma.BlinkOpsJobCreateInput[] = response.data.map(
-        (job) => ({
-          title: job.name,
-          location: job.location?.name || "No Location",
-          href: job.url_active_page,
-        })
-      );
-      console.log(`Scraped ${data.length} jobs from BlinkOps`);
+      const data: Prisma.IslandJobCreateInput[] = response.data.map((job) => ({
+        title: job.name,
+        location: job.location?.name || "No Location",
+        href: job.url_active_page,
+      }));
+      console.log(`Scraped ${data.length} jobs from Island`);
       console.log(data);
       return data;
     } catch (error) {
@@ -46,7 +44,7 @@ export class BlinkOpsJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.BlinkOpsJobCreateInput[]
+    jobData: Prisma.IslandJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -75,12 +73,7 @@ export class BlinkOpsJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "BlinkOps",
-      "https://www.blinkops.com/",
-      1
-    );
+    const blocks = buildJobMessage(data, "Island", "https://www.island.io/", 1);
     return {
       blocks,
       channel: 1,
@@ -88,7 +81,7 @@ export class BlinkOpsJobHandler {
   }
 
   static async run() {
-    const handler = new BlinkOpsJobHandler();
+    const handler = new IslandJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,7 +92,7 @@ export class BlinkOpsJobHandler {
   }
 }
 
-// BlinkOpsJobHandler.run().then(async (res) => {
+// IslandJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
