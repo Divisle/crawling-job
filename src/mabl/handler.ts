@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LaunchDarklyJobRepository } from "./database";
+import { MablJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class LaunchDarklyJobHandler {
-  constructor(private db = new LaunchDarklyJobRepository(new PrismaClient())) {
+export class MablJobHandler {
+  constructor(private db = new MablJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,29 +16,21 @@ export class LaunchDarklyJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.LaunchDarklyJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.MablJobCreateInput[]> {
     try {
       const response: {
         data: {
-          jobs: {
-            title: string;
-            absolute_url: string;
-            location: {
-              name: string;
-            };
-          }[];
-        };
-      } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/launchdarkly/jobs"
-      );
-      const data: Prisma.LaunchDarklyJobCreateInput[] = response.data.jobs.map(
-        (job) => ({
-          title: job.title,
-          location: job.location.name || "No Location",
-          href: job.absolute_url,
-        })
-      );
-      console.log(`Scraped ${data.length} jobs from LaunchDarkly`);
+          categories: { location: string };
+          text: string;
+          hostedUrl: string;
+        }[];
+      } = await axios.get("https://api.lever.co/v0/postings/mabl?mode=json");
+      const data: Prisma.MablJobCreateInput[] = response.data.map((job) => ({
+        title: job.text,
+        location: job.categories.location || "No Location",
+        href: job.hostedUrl,
+      }));
+      console.log(`Scraped ${data.length} jobs from Mabl`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +40,7 @@ export class LaunchDarklyJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LaunchDarklyJobCreateInput[]
+    jobData: Prisma.MablJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,12 +69,7 @@ export class LaunchDarklyJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "LaunchDarkly",
-      "https://launchdarkly.com/",
-      1
-    );
+    const blocks = buildJobMessage(data, "Mabl", "https://www.mabl.com/", 1);
     return {
       blocks,
       channel: 1,
@@ -90,7 +77,7 @@ export class LaunchDarklyJobHandler {
   }
 
   static async run() {
-    const handler = new LaunchDarklyJobHandler();
+    const handler = new MablJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,7 +88,7 @@ export class LaunchDarklyJobHandler {
   }
 }
 
-// LaunchDarklyJobHandler.run().then((res) => {
+// MablJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
