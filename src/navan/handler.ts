@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { MindtickleJobRepository } from "./database";
+import { NavanJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class MindtickleJobHandler {
-  constructor(private db = new MindtickleJobRepository(new PrismaClient())) {
+export class NavanJobHandler {
+  constructor(private db = new NavanJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,25 +16,29 @@ export class MindtickleJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.MindtickleJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.NavanJobCreateInput[]> {
     try {
       const response: {
         data: {
-          categories: { location: string };
-          text: string;
-          hostedUrl: string;
-        }[];
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
+              name: string;
+            };
+          }[];
+        };
       } = await axios.get(
-        "https://api.lever.co/v0/postings/mindtickle?mode=json"
+        "https://boards-api.greenhouse.io/v1/boards/tripactions/jobs"
       );
-      const data: Prisma.MindtickleJobCreateInput[] = response.data.map(
+      const data: Prisma.NavanJobCreateInput[] = response.data.jobs.map(
         (job) => ({
-          title: job.text,
-          location: job.categories.location || "No Location",
-          href: job.hostedUrl,
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Mindtickle`);
+      console.log(`Scraped ${data.length} jobs from Navan`);
       console.log(data);
       return data;
     } catch (error) {
@@ -44,7 +48,7 @@ export class MindtickleJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.MindtickleJobCreateInput[]
+    jobData: Prisma.NavanJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -73,12 +77,7 @@ export class MindtickleJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Mindtickle",
-      "https://www.mindtickle.com/",
-      1
-    );
+    const blocks = buildJobMessage(data, "Navan", "https://navan.com/", 1);
     return {
       blocks,
       channel: 1,
@@ -86,7 +85,7 @@ export class MindtickleJobHandler {
   }
 
   static async run() {
-    const handler = new MindtickleJobHandler();
+    const handler = new NavanJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -97,8 +96,8 @@ export class MindtickleJobHandler {
   }
 }
 
-// MindtickleJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+NavanJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
