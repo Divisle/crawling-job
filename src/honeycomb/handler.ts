@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { HebbiaJobRepository } from "./database";
+import { HoneycombJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class HebbiaJobHandler {
-  constructor(private db = new HebbiaJobRepository(new PrismaClient())) {
+export class HoneycombJobHandler {
+  constructor(private db = new HoneycombJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class HebbiaJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.HebbiaJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.HoneycombJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class HebbiaJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/hebbia/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/honeycomb/jobs"
       );
-      const data: Prisma.HebbiaJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.HoneycombJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Hebbia`);
+      console.log(`Scraped ${data.length} jobs from Honeycomb`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class HebbiaJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.HebbiaJobCreateInput[]
+    jobData: Prisma.HoneycombJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,7 +77,12 @@ export class HebbiaJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Hebbia", "https://www.hebbia.ai/", 1);
+    const blocks = buildJobMessage(
+      data,
+      "Honeycomb",
+      "https://www.honeycomb.io/",
+      1
+    );
     return {
       blocks,
       channel: 1,
@@ -85,7 +90,7 @@ export class HebbiaJobHandler {
   }
 
   static async run() {
-    const handler = new HebbiaJobHandler();
+    const handler = new HoneycombJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -96,8 +101,8 @@ export class HebbiaJobHandler {
   }
 }
 
-// HebbiaJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+HoneycombJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
