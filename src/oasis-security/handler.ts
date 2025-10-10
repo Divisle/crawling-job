@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { NavanJobRepository } from "./database";
+import { OasisSecurityJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class NavanJobHandler {
-  constructor(private db = new NavanJobRepository(new PrismaClient())) {
+export class OasisSecurityJobHandler {
+  constructor(private db = new OasisSecurityJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class NavanJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.NavanJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.OasisSecurityJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class NavanJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/tripactions/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/oasisnetwork/jobs"
       );
-      const data: Prisma.NavanJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.OasisSecurityJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Navan`);
+      console.log(`Scraped ${data.length} jobs from Oasis Security`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class NavanJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.NavanJobCreateInput[]
+    jobData: Prisma.OasisSecurityJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,7 +77,12 @@ export class NavanJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Navan", "https://navan.com/", 1);
+    const blocks = buildJobMessage(
+      data,
+      "Oasis Security",
+      "https://oasis.net/",
+      1
+    );
     return {
       blocks,
       channel: 1,
@@ -85,7 +90,7 @@ export class NavanJobHandler {
   }
 
   static async run() {
-    const handler = new NavanJobHandler();
+    const handler = new OasisSecurityJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -96,8 +101,8 @@ export class NavanJobHandler {
   }
 }
 
-// NavanJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+OasisSecurityJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
