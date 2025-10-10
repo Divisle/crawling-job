@@ -100,8 +100,8 @@ export class OpalJobHandler {
   }
 }
 
-OpalJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// OpalJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

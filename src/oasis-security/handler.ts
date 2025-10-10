@@ -101,8 +101,8 @@ export class OasisSecurityJobHandler {
   }
 }
 
-OasisSecurityJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// OasisSecurityJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });

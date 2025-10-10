@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { OctopusJobRepository } from "./database";
+import { RedwoodJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class OctopusJobHandler {
-  constructor(private db = new OctopusJobRepository(new PrismaClient())) {
+export class RedwoodJobHandler {
+  constructor(private db = new RedwoodJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,22 +16,35 @@ export class OctopusJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.OctopusJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.RedwoodJobCreateInput[]> {
     try {
+      const payload = {
+        appliedFacets: {},
+        limit: 20,
+        offset: 0,
+        searchText: "",
+      };
       const response: {
         data: {
-          categories: { location: string };
-          text: string;
-          hostedUrl: string;
-          id: string;
-        }[];
-      } = await axios.get("https://api.lever.co/v0/postings/octopus?mode=json");
-      const data: Prisma.OctopusJobCreateInput[] = response.data.map((job) => ({
-        title: job.text,
-        location: job.categories.location || "No Location",
-        href: "https://octopus.com/company/careers/" + job.id,
-      }));
-      console.log(`Scraped ${data.length} jobs from Octopus`);
+          jobPostings: {
+            title: string;
+            locationsText: string;
+            externalPath: string;
+          }[];
+        };
+      } = await axios.post(
+        "https://redwood.wd1.myworkdayjobs.com/wday/cxs/redwood/RWCareers/jobs",
+        payload
+      );
+      const data: Prisma.RedwoodJobCreateInput[] =
+        response.data.jobPostings.map((job) => ({
+          title: job.title,
+          location: job.locationsText || "No Location",
+          href:
+            "https://redwood.wd1.myworkdayjobs.com/en-US/RWCareers" +
+            job.externalPath,
+        }));
+      console.log(`Scraped ${data.length} jobs from Redwood`);
       console.log(data);
       return data;
     } catch (error) {
@@ -41,7 +54,7 @@ export class OctopusJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.OctopusJobCreateInput[]
+    jobData: Prisma.RedwoodJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -70,7 +83,7 @@ export class OctopusJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Octopus", "https://octopus.com/", 1);
+    const blocks = buildJobMessage(data, "Redwood", "http://redwood.com/", 1);
     return {
       blocks,
       channel: 1,
@@ -78,7 +91,7 @@ export class OctopusJobHandler {
   }
 
   static async run() {
-    const handler = new OctopusJobHandler();
+    const handler = new RedwoodJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -89,8 +102,8 @@ export class OctopusJobHandler {
   }
 }
 
-// OctopusJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+RedwoodJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});

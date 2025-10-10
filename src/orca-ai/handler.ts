@@ -136,6 +136,6 @@ export class OrcaAIScraper {
   }
 }
 
-OrcaAIScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// OrcaAIScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });
