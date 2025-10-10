@@ -137,6 +137,6 @@ export class BasetenScraper {
   }
 }
 
-BasetenScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// BasetenScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });
