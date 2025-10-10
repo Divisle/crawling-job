@@ -151,6 +151,6 @@ export class FactoryScraper {
   }
 }
 
-FactoryScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// FactoryScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });

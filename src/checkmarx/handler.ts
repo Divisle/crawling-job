@@ -137,6 +137,6 @@ export class CheckmarxScraper {
   }
 }
 
-CheckmarxScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// CheckmarxScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });
