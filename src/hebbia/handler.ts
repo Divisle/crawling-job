@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ForterJobRepository } from "./database";
+import { HebbiaJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ForterJobHandler {
-  constructor(private db = new ForterJobRepository(new PrismaClient())) {
+export class HebbiaJobHandler {
+  constructor(private db = new HebbiaJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class ForterJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ForterJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.HebbiaJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class ForterJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/forter/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/hebbia/jobs"
       );
-      const data: Prisma.ForterJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.HebbiaJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Forter`);
+      console.log(`Scraped ${data.length} jobs from Hebbia`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class ForterJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ForterJobCreateInput[]
+    jobData: Prisma.HebbiaJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +79,8 @@ export class ForterJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Forter",
-      "https://www.forter.com/",
+      "Hebbia",
+      "https://www.hebbia.com/",
       1
     );
     return {
@@ -90,7 +90,7 @@ export class ForterJobHandler {
   }
 
   static async run() {
-    const handler = new ForterJobHandler();
+    const handler = new HebbiaJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,7 +101,7 @@ export class ForterJobHandler {
   }
 }
 
-// ForterJobHandler.run().then((res) => {
+// HebbiaJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
