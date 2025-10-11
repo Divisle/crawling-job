@@ -3,6 +3,10 @@ import { WebClient } from "@slack/web-api";
 // Define a global function
 export async function buildMessage(channel: number, blocks: any[]) {
   const app = new WebClient(process.env.SLACK_BOT_TOKEN);
+  if (channel === 0) {
+    console.log("Channel ID is 0, skipping message send.");
+    return;
+  }
   if (!channel) {
     throw new Error("Channel ID is required");
   }
