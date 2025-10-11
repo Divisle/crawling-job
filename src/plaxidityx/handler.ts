@@ -99,8 +99,8 @@ export class PlaxidityxJobHandler {
   }
 }
 
-PlaxidityxJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// PlaxidityxJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

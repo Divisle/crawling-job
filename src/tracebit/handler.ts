@@ -1,11 +1,15 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ScytaleJobRepository } from "./database";
-import { JobMessageData, buildJobMessage } from "../template";
+import { TraceBitRepository } from "./database";
+import {
+  AshbyhqPostApiPayload,
+  JobMessageData,
+  buildJobMessage,
+} from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ScytaleJobHandler {
-  constructor(private db = new ScytaleJobRepository(new PrismaClient())) {
+export class TraceBitJobHandler {
+  constructor(private db = new TraceBitRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,26 +20,29 @@ export class ScytaleJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ScytaleJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.TraceBitJobCreateInput[]> {
+    const payload = {
+      operationName: "ApiJobBoardWithTeams",
+      variables: {
+        organizationHostedJobsPageName: "tracebit",
+      },
+      query:
+        "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
+    };
+
     try {
       const response: {
-        data: {
-          name: string;
-          location: {
-            name: string;
-          };
-          url_active_page: string;
-        }[];
-      } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/2A.009/positions?token=A29471F1E7B5B7128A432CDA2928A45B711452"
+        data: AshbyhqPostApiPayload;
+      } = await axios.post(
+        "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
+        payload
       );
-      const data: Prisma.ScytaleJobCreateInput[] = response.data.map((job) => ({
-        title: job.name,
-        location: job.location?.name || "No Location",
-        href: job.url_active_page,
-      }));
-      console.log(`Scraped ${data.length} jobs from Scytale`);
-      console.log(data);
+      const data: Prisma.TraceBitJobCreateInput[] =
+        response.data.data.jobBoard.jobPostings.map((posting) => ({
+          title: posting.title,
+          location: posting.locationName,
+          href: `https://jobs.ashbyhq.com/tracebit/${posting.id}`,
+        }));
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
@@ -44,7 +51,7 @@ export class ScytaleJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ScytaleJobCreateInput[]
+    jobData: Prisma.TraceBitJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -73,7 +80,7 @@ export class ScytaleJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Scytale", "https://scytale.ai/", 1);
+    const blocks = buildJobMessage(data, "TraceBit", "http://tracebit.com/", 1);
     return {
       blocks,
       channel: 1,
@@ -81,7 +88,7 @@ export class ScytaleJobHandler {
   }
 
   static async run() {
-    const handler = new ScytaleJobHandler();
+    const handler = new TraceBitJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -92,7 +99,7 @@ export class ScytaleJobHandler {
   }
 }
 
-// ScytaleJobHandler.run().then(async (res) => {
+// TraceBitJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
