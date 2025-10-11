@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { SingleStoreJobRepository } from "./database";
+import { SnorkelAIJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class SingleStoreJobHandler {
-  constructor(private db = new SingleStoreJobRepository(new PrismaClient())) {
+export class SnorkelAIJobHandler {
+  constructor(private db = new SnorkelAIJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class SingleStoreJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.SingleStoreJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SnorkelAIJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class SingleStoreJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/singlestore/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/snorkelai/jobs"
       );
-      const data: Prisma.SingleStoreJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.SnorkelAIJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from SingleStore`);
+      console.log(`Scraped ${data.length} jobs from SnorkelAI`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class SingleStoreJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.SingleStoreJobCreateInput[]
+    jobData: Prisma.SnorkelAIJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +79,8 @@ export class SingleStoreJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "SingleStore",
-      "https://www.singlestore.com/",
+      "SnorkelAI",
+      "https://www.snorkel.ai/",
       1
     );
     return {
@@ -90,7 +90,7 @@ export class SingleStoreJobHandler {
   }
 
   static async run() {
-    const handler = new SingleStoreJobHandler();
+    const handler = new SnorkelAIJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,8 +101,8 @@ export class SingleStoreJobHandler {
   }
 }
 
-// SingleStoreJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+SnorkelAIJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
