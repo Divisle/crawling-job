@@ -107,8 +107,8 @@ export class UserTestingJobHandler {
   }
 }
 
-UserTestingJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// UserTestingJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });

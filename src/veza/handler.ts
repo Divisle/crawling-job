@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { VegaJobRepository } from "./database";
+import { VezaJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class VegaJobHandler {
-  constructor(private db = new VegaJobRepository(new PrismaClient())) {
+export class VezaJobHandler {
+  constructor(private db = new VezaJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,25 +16,29 @@ export class VegaJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.VegaJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.VezaJobCreateInput[]> {
     try {
       const response: {
         data: {
-          name: string;
-          location: {
-            name: string;
-          };
-          url_active_page: string;
-        }[];
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
+              name: string;
+            };
+          }[];
+        };
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/C9.009/positions?token=9C9447F139227241392272430ED30ED04E48"
+        "https://boards-api.greenhouse.io/v1/boards/veza/jobs"
       );
-      const data: Prisma.VegaJobCreateInput[] = response.data.map((job) => ({
-        title: job.name,
-        location: job.location?.name || "No Location",
-        href: job.url_active_page,
-      }));
-      console.log(`Scraped ${data.length} jobs from Vega`);
+      const data: Prisma.VezaJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
+        })
+      );
+      console.log(`Scraped ${data.length} jobs from Veza`);
       console.log(data);
       return data;
     } catch (error) {
@@ -44,7 +48,7 @@ export class VegaJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.VegaJobCreateInput[]
+    jobData: Prisma.VezaJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -73,7 +77,7 @@ export class VegaJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Vega", "https://www.vega.io/", 1);
+    const blocks = buildJobMessage(data, "Veza", "https://www.veza.com/", 1);
     return {
       blocks,
       channel: 1,
@@ -81,7 +85,7 @@ export class VegaJobHandler {
   }
 
   static async run() {
-    const handler = new VegaJobHandler();
+    const handler = new VezaJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -92,8 +96,8 @@ export class VegaJobHandler {
   }
 }
 
-// VegaJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+VezaJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
