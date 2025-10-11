@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { PlaxidityxJobRepository } from "./database";
+import { ScytaleJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class PlaxidityxJobHandler {
-  constructor(private db = new PlaxidityxJobRepository(new PrismaClient())) {
+export class ScytaleJobHandler {
+  constructor(private db = new ScytaleJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class PlaxidityxJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.PlaxidityxJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ScytaleJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -27,16 +27,14 @@ export class PlaxidityxJobHandler {
           url_active_page: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/A7.004/positions?token=7A42DD81E907A444C444C403D203D200"
+        "https://www.comeet.co/careers-api/2.0/company/2A.009/positions?token=A29471F1E7B5B7128A432CDA2928A45B711452"
       );
-      const data: Prisma.PlaxidityxJobCreateInput[] = response.data.map(
-        (job) => ({
-          title: job.name,
-          location: job.location?.name || "No Location",
-          href: job.url_active_page,
-        })
-      );
-      console.log(`Scraped ${data.length} jobs from Plaxidityx`);
+      const data: Prisma.ScytaleJobCreateInput[] = response.data.map((job) => ({
+        title: job.name,
+        location: job.location?.name || "No Location",
+        href: job.url_active_page,
+      }));
+      console.log(`Scraped ${data.length} jobs from Scytale`);
       console.log(data);
       return data;
     } catch (error) {
@@ -46,7 +44,7 @@ export class PlaxidityxJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.PlaxidityxJobCreateInput[]
+    jobData: Prisma.ScytaleJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -75,12 +73,7 @@ export class PlaxidityxJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Plaxidityx",
-      "https://plaxidityx.com/",
-      1
-    );
+    const blocks = buildJobMessage(data, "Scytale", "https://scytale.ai/", 1);
     return {
       blocks,
       channel: 1,
@@ -88,7 +81,7 @@ export class PlaxidityxJobHandler {
   }
 
   static async run() {
-    const handler = new PlaxidityxJobHandler();
+    const handler = new ScytaleJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,7 +92,7 @@ export class PlaxidityxJobHandler {
   }
 }
 
-PlaxidityxJobHandler.run().then(async (res) => {
+ScytaleJobHandler.run().then(async (res) => {
   if (res.blocks.length > 0) {
     await buildMessage(res.channel, res.blocks);
   }
