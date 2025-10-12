@@ -101,8 +101,8 @@ export class ClickHouseJobHandler {
   }
 }
 
-ClickHouseJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// ClickHouseJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });
