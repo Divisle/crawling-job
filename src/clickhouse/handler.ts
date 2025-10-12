@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { OpaqueRepository } from "./database";
+import { ClickHouseJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class OpaqueJobHandler {
-  constructor(private db = new OpaqueRepository(new PrismaClient())) {
+export class ClickHouseJobHandler {
+  constructor(private db = new ClickHouseJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,26 +16,30 @@ export class OpaqueJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.OpaqueJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ClickHouseJobCreateInput[]> {
     try {
       const response: {
         data: {
-          items: {
-            name: string;
-            locations: {
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
               name: string;
-            }[];
-            url: string;
+            };
           }[];
         };
-      } = await axios.get("https://ats.rippling.com/api/v2/board/opaque/jobs");
-      const data: Prisma.OpaqueJobCreateInput[] = response.data.items.map(
-        (item) => ({
-          title: item.name,
-          location: item.locations[0].name,
-          href: item.url,
+      } = await axios.get(
+        "https://boards-api.greenhouse.io/v1/boards/clickhouse/jobs"
+      );
+      const data: Prisma.ClickHouseJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
         })
       );
+      console.log(`Scraped ${data.length} jobs from SnorkelAI`);
+      console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
@@ -44,7 +48,7 @@ export class OpaqueJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.OpaqueJobCreateInput[]
+    jobData: Prisma.ClickHouseJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -73,7 +77,12 @@ export class OpaqueJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Opaque", "https://www.opaque.co/", 2);
+    const blocks = buildJobMessage(
+      data,
+      "ClickHouse",
+      "https://clickhouse.com/",
+      2
+    );
     return {
       blocks,
       channel: 2,
@@ -81,7 +90,7 @@ export class OpaqueJobHandler {
   }
 
   static async run() {
-    const handler = new OpaqueJobHandler();
+    const handler = new ClickHouseJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -92,8 +101,8 @@ export class OpaqueJobHandler {
   }
 }
 
-// OpaqueJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+ClickHouseJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
