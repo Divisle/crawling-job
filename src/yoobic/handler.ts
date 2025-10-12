@@ -142,6 +142,6 @@ export class YoobicScraper {
   }
 }
 
-YoobicScraper.run().then((result) => {
-  buildMessage(result.channel, result.blocks);
-});
+// YoobicScraper.run().then((result) => {
+//   buildMessage(result.channel, result.blocks);
+// });

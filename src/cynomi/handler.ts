@@ -92,8 +92,8 @@ export class CynomiJobHandler {
   }
 }
 
-CynomiJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// CynomiJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

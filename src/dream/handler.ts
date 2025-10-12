@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { KurrentJobRepository } from "./database";
+import { DreamJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class KurrentJobHandler {
-  constructor(private db = new KurrentJobRepository(new PrismaClient())) {
+export class DreamJobHandler {
+  constructor(private db = new DreamJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,30 +16,25 @@ export class KurrentJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.KurrentJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.DreamJobCreateInput[]> {
     try {
       const response: {
         data: {
-          jobs: {
-            title: string;
-            absolute_url: string;
-            location: {
-              name: string;
-            };
-            id: string;
-          }[];
-        };
+          name: string;
+          location: {
+            name: string;
+          };
+          url_active_page: string;
+        }[];
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/kurrent/jobs"
+        "https://www.comeet.co/careers-api/2.0/company/99.002/positions?token=99242FE9921CB6042FE396C42FE132442FE"
       );
-      const data: Prisma.KurrentJobCreateInput[] = response.data.jobs.map(
-        (job) => ({
-          title: job.title,
-          location: job.location.name || "No Location",
-          href: "https://www.kurrent.io/careers?gh_jid=" + job.id,
-        })
-      );
-      console.log(`Scraped ${data.length} jobs from Kurrent`);
+      const data: Prisma.DreamJobCreateInput[] = response.data.map((job) => ({
+        title: job.name,
+        location: job.location?.name || "No Location",
+        href: job.url_active_page,
+      }));
+      console.log(`Scraped ${data.length} jobs from Dream`);
       console.log(data);
       return data;
     } catch (error) {
@@ -49,7 +44,7 @@ export class KurrentJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.KurrentJobCreateInput[]
+    jobData: Prisma.DreamJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,18 +75,18 @@ export class KurrentJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Kurrent",
-      "https://www.kurrent.io/",
-      1
+      "Dream Security",
+      "https://dreamgroup.com/",
+      2
     );
     return {
       blocks,
-      channel: 1,
+      channel: 2,
     };
   }
 
   static async run() {
-    const handler = new KurrentJobHandler();
+    const handler = new DreamJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -102,8 +97,8 @@ export class KurrentJobHandler {
   }
 }
 
-// KurrentJobHandler.run().then((res) => {
+// DreamJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
+//     await buildMessage(res.channel, res.blocks);
 //   }
 // });

@@ -100,8 +100,8 @@ export class IncidentJobHandler {
   }
 }
 
-IncidentJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// IncidentJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });
