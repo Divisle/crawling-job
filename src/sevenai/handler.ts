@@ -80,7 +80,7 @@ export class SevenAIJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Seven AI", "https://sevenai.com/", 1);
+    const blocks = buildJobMessage(data, "Seven AI", "https://sevenai.com/", 2);
     return {
       blocks,
       channel: 2,
@@ -99,8 +99,8 @@ export class SevenAIJobHandler {
   }
 }
 
-SevenAIJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// SevenAIJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

@@ -84,7 +84,7 @@ export class StackOneJobHandler {
       data,
       "Stack One",
       "https://www.stackone.com/",
-      1
+      2
     );
     return {
       blocks,
