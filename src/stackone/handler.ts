@@ -1,16 +1,15 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { CognitionRepository } from "./database";
+import { StackOneRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
-  AshbyhqPostInterface,
   JobMessageData,
   buildJobMessage,
 } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class CognitionJobHandler {
-  constructor(private db = new CognitionRepository(new PrismaClient())) {
+export class StackOneJobHandler {
+  constructor(private db = new StackOneRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -21,11 +20,11 @@ export class CognitionJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.CognitionJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.StackOneJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "cognition",
+        organizationHostedJobsPageName: "stackone",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -38,11 +37,11 @@ export class CognitionJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.CognitionJobCreateInput[] =
+      const data: Prisma.StackOneJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/cognition/${posting.id}`,
+          href: `https://jobs.ashbyhq.com/stackone/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -52,7 +51,7 @@ export class CognitionJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.CognitionJobCreateInput[]
+    jobData: Prisma.StackOneJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -83,18 +82,18 @@ export class CognitionJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Cognition",
-      "https://cognition.ai/",
+      "Stack One",
+      "https://www.stackone.com/",
       1
     );
     return {
       blocks,
-      channel: 1,
+      channel: 2,
     };
   }
 
   static async run() {
-    const handler = new CognitionJobHandler();
+    const handler = new StackOneJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -105,8 +104,8 @@ export class CognitionJobHandler {
   }
 }
 
-// CognitionJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+StackOneJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
