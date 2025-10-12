@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { StackOneRepository } from "./database";
+import { SevenAIRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class StackOneJobHandler {
-  constructor(private db = new StackOneRepository(new PrismaClient())) {
+export class SevenAIJobHandler {
+  constructor(private db = new SevenAIRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class StackOneJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.StackOneJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SevenAIJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "stackone",
+        organizationHostedJobsPageName: "sevenai",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class StackOneJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.StackOneJobCreateInput[] =
+      const data: Prisma.SevenAIJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/stackone/${posting.id}`,
+          href: `https://7ai.com/careers?ashby_jid=${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class StackOneJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.StackOneJobCreateInput[]
+    jobData: Prisma.SevenAIJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,12 +80,7 @@ export class StackOneJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Stack One",
-      "https://www.stackone.com/",
-      1
-    );
+    const blocks = buildJobMessage(data, "Seven AI", "https://sevenai.com/", 1);
     return {
       blocks,
       channel: 2,
@@ -93,7 +88,7 @@ export class StackOneJobHandler {
   }
 
   static async run() {
-    const handler = new StackOneJobHandler();
+    const handler = new SevenAIJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,8 +99,8 @@ export class StackOneJobHandler {
   }
 }
 
-// StackOneJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+SevenAIJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
