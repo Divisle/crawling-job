@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LayerzeroJobRepository } from "./database";
+import { LightrunJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class LayerzeroJobHandler {
-  constructor(private db = new LayerzeroJobRepository(new PrismaClient())) {
+export class LightrunJobHandler {
+  constructor(private db = new LightrunJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class LayerzeroJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.LayerzeroJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.LightrunJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -26,19 +26,20 @@ export class LayerzeroJobHandler {
             location: {
               name: string;
             };
+            id: string;
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/layerzerolabs/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/lightrun/jobs"
       );
-      const data: Prisma.LayerzeroJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.LightrunJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
-          href: job.absolute_url,
+          href: `https://lightrun.com/careers/${job.id}`,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Layerzero labs`);
+      console.log(`Scraped ${data.length} jobs from Lightrun`);
       console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +49,7 @@ export class LayerzeroJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LayerzeroJobCreateInput[]
+    jobData: Prisma.LightrunJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +80,8 @@ export class LayerzeroJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Layerzero labs",
-      "https://layerzero.network",
+      "Lightrun",
+      "https://lightrun.com/",
       2
     );
     return {
@@ -90,7 +91,7 @@ export class LayerzeroJobHandler {
   }
 
   static async run() {
-    const handler = new LayerzeroJobHandler();
+    const handler = new LightrunJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,7 +102,7 @@ export class LayerzeroJobHandler {
   }
 }
 
-// LayerzeroJobHandler.run().then((res) => {
+// LightrunJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
