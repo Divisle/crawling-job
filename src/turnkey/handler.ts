@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { StainlessJobRepository } from "./database";
+import { TurnkeyJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class StainlessJobHandler {
-  constructor(private db = new StainlessJobRepository(new PrismaClient())) {
+export class TurnkeyJobHandler {
+  constructor(private db = new TurnkeyJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class StainlessJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.StainlessJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.TurnkeyJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "stainlessapi",
+        organizationHostedJobsPageName: "turnkey",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class StainlessJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.StainlessJobCreateInput[] =
+      const data: Prisma.TurnkeyJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/stainlessapi/${posting.id}`,
+          href: `https://jobs.ashbyhq.com/turnkey/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class StainlessJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.StainlessJobCreateInput[]
+    jobData: Prisma.TurnkeyJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -82,8 +82,8 @@ export class StainlessJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Stainless",
-      "https://www.stainless.com/",
+      "Turnkey",
+      "https://www.turnkey.com/",
       2
     );
     return {
@@ -93,7 +93,7 @@ export class StainlessJobHandler {
   }
 
   static async run() {
-    const handler = new StainlessJobHandler();
+    const handler = new TurnkeyJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,8 +104,8 @@ export class StainlessJobHandler {
   }
 }
 
-// StainlessJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+TurnkeyJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
