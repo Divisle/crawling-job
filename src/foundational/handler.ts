@@ -72,7 +72,10 @@ export class FoundationalJobHandler {
             .map((block) => ({
               title: block.value.properties.title[0][0],
               location: block.value.properties["zs>i"][0][0],
-              href: `https://foundational-data.notion.site/${block.value.id}`,
+              href: `https://foundational-data.notion.site/${block.value.id.replaceAll(
+                "-",
+                ""
+              )}`,
             }))
         : [];
       return data;
