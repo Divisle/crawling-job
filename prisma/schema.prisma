@@ -1008,3 +1008,21 @@ model Horizon3Job {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model InstruqtJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PhoebeJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

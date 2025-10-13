@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Horizon3JobRepository } from "./database";
+import { PhoebeJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class Horizon3JobHandler {
-  constructor(private db = new Horizon3JobRepository(new PrismaClient())) {
+export class PhoebeJobHandler {
+  constructor(private db = new PhoebeJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class Horizon3JobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.Horizon3JobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.PhoebeJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "horizon3ai",
+        organizationHostedJobsPageName: "phoebe",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class Horizon3JobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.Horizon3JobCreateInput[] =
+      const data: Prisma.PhoebeJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://horizon3.ai/join-our-team/?ashby_jid=${posting.id}`,
+          href: `https://jobs.ashbyhq.com/phoebe/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class Horizon3JobHandler {
   }
 
   async filterData(
-    jobData: Prisma.Horizon3JobCreateInput[]
+    jobData: Prisma.PhoebeJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,7 +80,7 @@ export class Horizon3JobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Horizon3", "https://horizon3.ai/", 2);
+    const blocks = buildJobMessage(data, "Phoebe", "https://phoebe.ai/", 2);
     return {
       blocks,
       channel: 2,
@@ -88,7 +88,7 @@ export class Horizon3JobHandler {
   }
 
   static async run() {
-    const handler = new Horizon3JobHandler();
+    const handler = new PhoebeJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,7 +99,7 @@ export class Horizon3JobHandler {
   }
 }
 
-// Horizon3JobHandler.run().then(async (res) => {
+// PhoebeJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
