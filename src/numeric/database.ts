@@ -1,146 +1,81 @@
 import { NumericJob, Prisma, PrismaClient } from "@prisma/client";
-import { NumericJobInterface, NumericJobTagInterface } from "../template";
-import { time } from "console";
-export class NumericJobRepository {
+import { AshbyhqPostInterface } from "@src/template";
+
+export class NumericRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async createMany(data: NumericJobInterface[]) {
-    try {
-      const jobData: Prisma.NumericJobCreateInput[] = [];
-      const tagData: NumericJobTagInterface[] = [];
-      data.forEach((job) => {
-        jobData.push({
-          title: job.title,
-          company: job.company,
-          address: job.address,
-          location_type: job.location_type,
-          department: job.department,
-          href: job.href,
-          time: job.time,
-        });
-        job.tags?.forEach((tag) => {
-          tagData.push({
-            job_title: job.title,
-            job_href: job.href,
-            tag,
-          });
-        });
-      });
-      await this.prisma.numericJob.createMany({ data: jobData });
-      // Select all jobId, tag from numericJob join with data of tag on job_title and job_href fields from a VALUES clause
-      if (tagData.length > 0) {
-        const query = `
-          SELECT j.id as "jobId", t.tag
-          FROM "NumericJob" j
-          JOIN (VALUES 
-            ${tagData
-              .map(
-                (tag) => `('${tag.job_title}', '${tag.job_href}', '${tag.tag}')`
-              )
-              .join(", ")}
-        ) AS t (job_title, job_href, tag)
-        ON j.title = t.job_title AND j.href = t.job_href
-      `;
-        const existingTags: { jobId: string; tag: string }[] =
-          await this.prisma.$queryRawUnsafe(query);
-        await this.prisma.numericJobTag.createMany({
-          data: existingTags,
-        });
-      }
-      return true;
-    } catch (error) {
-      console.error("Error creating numeric jobs:", error);
-      return false;
-    }
+  async getAll(): Promise<NumericJob[]> {
+    return this.prisma.numericJob.findMany({});
   }
 
-  async findMany(): Promise<
-    Prisma.NumericJobGetPayload<{ include: { tags: true } }>[]
-  > {
+  async createMany(data: Prisma.NumericJobCreateInput[]): Promise<boolean> {
     try {
-      return await this.prisma.numericJob.findMany({
-        include: {
-          tags: true,
-        },
+      await this.prisma.numericJob.createMany({
+        data,
       });
-    } catch (error) {
-      console.error("Error finding numeric jobs:", error);
-      return [];
-    }
-  }
-
-  async updateMany(data: Prisma.NumericJobUpdateInput[]): Promise<boolean> {
-    try {
-      await this.prisma.numericJob.updateMany({ data });
       return true;
     } catch (error) {
-      console.error("Error updating numeric jobs:", error);
+      console.error("Error creating Numeric jobs:", error);
       return false;
     }
   }
 
   async deleteMany(ids: string[]): Promise<boolean> {
     try {
-      await this.prisma.numericJob.deleteMany({ where: { id: { in: ids } } });
+      await this.prisma.numericJob.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      });
       return true;
     } catch (error) {
-      console.error("Error deleting numeric jobs:", error);
+      console.error("Error deleting Numeric jobs:", error);
       return false;
     }
   }
 
-  async compareData(datas: NumericJobInterface[]) {
-    const newJobs: NumericJobInterface[] = [];
-    const updateJobs: NumericJobInterface[] = [];
-    const deleteJobs: NumericJobInterface[] = [];
-    const existingJobs = await this.findMany();
-    existingJobs.forEach((job) => {
-      if (
-        !datas.some(
-          (newJob) => newJob.title === job.title && newJob.href === job.href
-        )
-      ) {
-        deleteJobs.push({
-          id: job.id,
+  async compareData(data: Prisma.NumericJobCreateInput[]) {
+    const deleteJobs: Prisma.NumericJobCreateInput[] = [];
+    const updateJobs: Prisma.NumericJobCreateInput[] = [];
+    const newJobs: Prisma.NumericJobCreateInput[] = [];
+    const existingJobs = await this.getAll();
+
+    data.forEach((job) => {
+      const existingJob = existingJobs.find((j) => j.href === job.href);
+      if (existingJob) {
+        if (
+          existingJob.title === job.title &&
+          existingJob.location === job.location
+        ) {
+        } else {
+          updateJobs.push({
+            id: existingJob.id,
+            title: job.title,
+            location: job.location,
+            href: job.href,
+          });
+        }
+      } else {
+        newJobs.push({
           title: job.title,
-          company: job.company,
-          address: job.address,
-          location_type: job.location_type,
-          department: job.department,
+          location: job.location,
           href: job.href,
-          time: job.time,
-          tags: job.tags.map((tag) => tag.tag),
         });
       }
     });
-    datas.forEach((newJob) => {
-      const existingJob = existingJobs.find(
-        (job) => job.title === newJob.title && job.href === newJob.href
-      );
-      if (!existingJob) {
-        newJobs.push(newJob);
-      } else if (
-        existingJob.title !== newJob.title ||
-        existingJob.location_type !== newJob.location_type ||
-        existingJob.address !== newJob.address ||
-        existingJob.department !== newJob.department ||
-        existingJob.time !== newJob.time ||
-        existingJob.company !== newJob.company
-      ) {
-        updateJobs.push({ ...newJob, id: existingJob.id });
-      } else {
-        if (existingJob.tags.length === newJob.tags.length) {
-          for (const tag of newJob.tags) {
-            if (!existingJob.tags.some((t) => t.tag === tag)) {
-              updateJobs.push({ ...newJob, id: existingJob.id });
-              break;
-            }
-          }
-        } else {
-          updateJobs.push({ ...newJob, id: existingJob.id });
-        }
+    existingJobs.forEach((job) => {
+      const locExists = data.find((j) => j.href === job.href);
+      if (!locExists) {
+        deleteJobs.push({
+          id: job.id,
+          title: job.title,
+          location: job.location,
+          href: job.href,
+        });
       }
     });
-    return { newJobs, updateJobs, deleteJobs };
+    return { deleteJobs, updateJobs, newJobs };
   }
 }
