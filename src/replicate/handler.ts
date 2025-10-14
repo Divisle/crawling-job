@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { RekaJobRepository } from "./database";
+import { ReplicateJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class RekaJobHandler {
-  constructor(private db = new RekaJobRepository(new PrismaClient())) {
+export class ReplicateJobHandler {
+  constructor(private db = new ReplicateJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class RekaJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.RekaJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ReplicateJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "Reka",
+        organizationHostedJobsPageName: "replicate",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class RekaJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.RekaJobCreateInput[] =
+      const data: Prisma.ReplicateJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://reka.ai/careers?ashby_jid=${posting.id}`,
+          href: `https://replicate.com/about/jobs/?ashby_jid=${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class RekaJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.RekaJobCreateInput[]
+    jobData: Prisma.ReplicateJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,7 +80,12 @@ export class RekaJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Reka AI", "https://reka.ai/", 2);
+    const blocks = buildJobMessage(
+      data,
+      "Replicate",
+      "https://replicate.com/",
+      2
+    );
     return {
       blocks,
       channel: 2,
@@ -88,7 +93,7 @@ export class RekaJobHandler {
   }
 
   static async run() {
-    const handler = new RekaJobHandler();
+    const handler = new ReplicateJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,8 +104,8 @@ export class RekaJobHandler {
   }
 }
 
-// RekaJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+ReplicateJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
