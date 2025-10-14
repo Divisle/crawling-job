@@ -81,8 +81,8 @@ export class BlockaidScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Blockaid.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from Blockaid.`);
+    // console.log(jobData);
     return jobData;
   }
 

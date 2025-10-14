@@ -42,7 +42,6 @@ export class MerlinJobHandler {
       );
       const data: Prisma.MerlinJobCreateInput[] =
         response.data.jobRequisitions.map((job) => {
-          console.log(job);
           const href =
             "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=7755548e-7665-4c05-8fec-aec728992b42&ccId=9201135652345_2&lang=en_US&selectedMenuKey=CurrentOpenings&hsCtaAttrib=187795530398#&jobId=" +
             job.customFieldGroup.stringFields.find(
@@ -54,8 +53,8 @@ export class MerlinJobHandler {
             "No Location";
           return { title, location, href };
         });
-      console.log(`Scraped ${data.length} jobs from Merlin`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Merlin`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

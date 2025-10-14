@@ -38,8 +38,8 @@ export class ForterJobHandler {
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Forter`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Forter`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

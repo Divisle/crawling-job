@@ -103,8 +103,8 @@ export class FactoryScraper {
         await this.driver.sleep(1000);
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Factory.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from Factory.`);
+    // console.log(jobData);
     return jobData;
   }
 

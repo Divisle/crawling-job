@@ -38,8 +38,8 @@ export class NavanJobHandler {
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Navan`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Navan`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

@@ -34,8 +34,8 @@ export class PushSecurityJobHandler {
           href: job.hostedUrl,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Push Security`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Push Security`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

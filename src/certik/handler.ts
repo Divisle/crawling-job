@@ -30,8 +30,8 @@ export class CertikJobHandler {
         location: job.categories.location || "No Location",
         href: job.hostedUrl,
       }));
-      console.log(`Scraped ${data.length} jobs from Certik`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Certik`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

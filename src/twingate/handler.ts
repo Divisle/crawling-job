@@ -34,8 +34,8 @@ export class TwingateJobHandler {
           href: job.hostedUrl,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Twingate`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Twingate`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

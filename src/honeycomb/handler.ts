@@ -38,8 +38,8 @@ export class HoneycombJobHandler {
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Honeycomb`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Honeycomb`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

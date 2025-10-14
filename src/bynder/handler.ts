@@ -49,8 +49,8 @@ export class BynderJobHandler {
           "-" +
           job.urlJobName,
       }));
-      console.log(`Scraped ${data.length} jobs from Bynder`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Bynder`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

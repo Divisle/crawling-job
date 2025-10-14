@@ -73,8 +73,8 @@ export class PactumJobHandler {
           };
         }
       );
-      console.log(`Scraped ${data.length} jobs from Pactum`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Pactum`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

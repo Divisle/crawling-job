@@ -82,8 +82,8 @@ export class GetbalanceScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from GetBalance.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from GetBalance.`);
+    // console.log(jobData);
     return jobData;
   }
 

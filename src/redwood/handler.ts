@@ -44,8 +44,8 @@ export class RedwoodJobHandler {
             "https://redwood.wd1.myworkdayjobs.com/en-US/RWCareers" +
             job.externalPath,
         }));
-      console.log(`Scraped ${data.length} jobs from Redwood`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Redwood`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

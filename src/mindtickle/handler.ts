@@ -34,8 +34,8 @@ export class MindtickleJobHandler {
           href: job.hostedUrl,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Mindtickle`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Mindtickle`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

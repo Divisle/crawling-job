@@ -32,9 +32,8 @@ export class CorridorJobHandler {
         href: job.jobUrl,
         location: job.location,
       }));
-      console.log(response.data);
-      console.log(`Scraped ${data.length} jobs from Corridor`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Corridor`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

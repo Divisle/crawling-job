@@ -84,8 +84,8 @@ export class CheckmarxScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Checkmarx.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from Checkmarx.`);
+    // console.log(jobData);
     return jobData;
   }
 

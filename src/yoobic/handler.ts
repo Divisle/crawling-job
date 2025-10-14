@@ -70,7 +70,6 @@ export class YoobicScraper {
           jobElement
         );
 
-        console.log(jobElement, title, href);
         const metaElement = (
           await this.driver.findElements(
             By.xpath(".//ul[@id='jobs_list_container']//div/div")
@@ -94,8 +93,8 @@ export class YoobicScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Yoobic.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from Yoobic.`);
+    // console.log(jobData);
     return jobData;
   }
 

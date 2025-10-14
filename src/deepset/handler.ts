@@ -91,8 +91,8 @@ export class DeepsetScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from Deepset.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from Deepset.`);
+    // console.log(jobData);
     return jobData;
   }
 

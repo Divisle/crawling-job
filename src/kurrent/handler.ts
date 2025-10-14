@@ -39,8 +39,8 @@ export class KurrentJobHandler {
           href: "https://www.kurrent.io/careers?gh_jid=" + job.id,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Kurrent`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Kurrent`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

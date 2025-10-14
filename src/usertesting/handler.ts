@@ -44,8 +44,8 @@ export class UserTestingJobHandler {
             "https://usertesting.wd12.myworkdayjobs.com/en-US/UserTesting" +
             job.externalPath,
         }));
-      console.log(`Scraped ${data.length} jobs from UserTesting`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from UserTesting`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

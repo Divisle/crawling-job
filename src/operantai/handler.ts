@@ -66,7 +66,6 @@ export class OperantaiJobScraper {
           );
 
           if (deptIndex >= currentDepartmentElements.length) {
-            console.log(`Department ${deptIndex} no longer exists, skipping`);
             continue;
           }
 
@@ -95,9 +94,6 @@ export class OperantaiJobScraper {
               );
 
               if (deptIndex >= freshDepartmentElements.length) {
-                console.log(
-                  `Department ${deptIndex} disappeared, breaking inner loop`
-                );
                 break;
               }
 
@@ -108,9 +104,6 @@ export class OperantaiJobScraper {
                 );
 
               if (jobIndex >= freshJobElements.length) {
-                console.log(
-                  `Job ${jobIndex} in department ${deptIndex} no longer exists, skipping`
-                );
                 continue;
               }
 

@@ -36,8 +36,8 @@ export class BlinkOpsJobHandler {
           href: job.url_active_page,
         })
       );
-      console.log(`Scraped ${data.length} jobs from BlinkOps`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from BlinkOps`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

@@ -34,8 +34,8 @@ export class NomaJobHandler {
         location: job.location?.name || "No Location",
         href: job.url_active_page,
       }));
-      console.log(`Scraped ${data.length} jobs from Noma`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Noma`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

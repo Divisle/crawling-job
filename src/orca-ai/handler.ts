@@ -83,8 +83,8 @@ export class OrcaAIScraper {
         break;
       }
     }
-    console.log(`Scraped ${jobData.length} jobs from OrcaAI.`);
-    console.log(jobData);
+    // console.log(`Scraped ${jobData.length} jobs from OrcaAI.`);
+    // console.log(jobData);
     return jobData;
   }
 

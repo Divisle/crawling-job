@@ -31,8 +31,8 @@ export class OctopusJobHandler {
         location: job.categories.location || "No Location",
         href: "https://octopus.com/company/careers/" + job.id,
       }));
-      console.log(`Scraped ${data.length} jobs from Octopus`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Octopus`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

@@ -39,8 +39,8 @@ export class LightrunJobHandler {
           href: `https://lightrun.com/careers/${job.id}`,
         })
       );
-      console.log(`Scraped ${data.length} jobs from Lightrun`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from Lightrun`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

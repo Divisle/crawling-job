@@ -38,8 +38,8 @@ export class LaunchDarklyJobHandler {
           href: job.absolute_url,
         })
       );
-      console.log(`Scraped ${data.length} jobs from LaunchDarkly`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from LaunchDarkly`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);

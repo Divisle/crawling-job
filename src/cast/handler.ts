@@ -32,8 +32,8 @@ export class CastAIJobHandler {
         location: job.location || "No Location",
         href: job.absolute_url,
       }));
-      console.log(`Scraped ${data.length} jobs from CastAI`);
-      console.log(data);
+      // console.log(`Scraped ${data.length} jobs from CastAI`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
