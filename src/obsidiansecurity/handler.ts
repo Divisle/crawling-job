@@ -1,11 +1,13 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { MinJobRepository } from "./database";
+import { ObsidianSecurityJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class MinJobHandler {
-  constructor(private db = new MinJobRepository(new PrismaClient())) {
+export class ObsidianSecurityJobHandler {
+  constructor(
+    private db = new ObsidianSecurityJobRepository(new PrismaClient())
+  ) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +18,7 @@ export class MinJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.MinJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ObsidianSecurityJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +31,15 @@ export class MinJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/minio/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/obsidiansecurity/jobs"
       );
-      const data: Prisma.MinJobCreateInput[] = response.data.jobs.map(
-        (job) => ({
+      const data: Prisma.ObsidianSecurityJobCreateInput[] =
+        response.data.jobs.map((job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
-        })
-      );
-      // console.log(`Scraped ${data.length} jobs from MinIO`);
+        }));
+      // console.log(`Scraped ${data.length} jobs from Obsidian Security`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +49,7 @@ export class MinJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.MinJobCreateInput[]
+    jobData: Prisma.ObsidianSecurityJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,7 +78,12 @@ export class MinJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "MinIO", "https://min.io/", 2);
+    const blocks = buildJobMessage(
+      data,
+      "Obsidian Security",
+      "https://www.obsidiansecurity.com/",
+      2
+    );
     return {
       blocks,
       channel: 2,
@@ -85,7 +91,7 @@ export class MinJobHandler {
   }
 
   static async run() {
-    const handler = new MinJobHandler();
+    const handler = new ObsidianSecurityJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -96,8 +102,8 @@ export class MinJobHandler {
   }
 }
 
-// MinJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+ObsidianSecurityJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
