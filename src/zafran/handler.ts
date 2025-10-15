@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { WorkatoJobRepository } from "./database";
+import { ZafranJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class WorkatoJobHandler {
-  constructor(private db = new WorkatoJobRepository(new PrismaClient())) {
+export class ZafranJobHandler {
+  constructor(private db = new ZafranJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,29 +16,29 @@ export class WorkatoJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.WorkatoJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ZafranJobCreateInput[]> {
     try {
       const response: {
         data: {
-          jobs: {
-            title: string;
-            absolute_url: string;
-            location: {
-              name: string;
-            };
-          }[];
-        };
+          name: string;
+          location: {
+            name: string;
+          };
+          url_active_page: string;
+          uid: string;
+          url_detected_page: string;
+        }[];
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/workato/jobs"
+        "https://www.comeet.co/careers-api/2.0/company/49.009/positions?token=94940FF0129212929492524252453914A48"
       );
-      const data: Prisma.WorkatoJobCreateInput[] = response.data.jobs.map(
-        (job) => ({
-          title: job.title,
-          location: job.location.name || "No Location",
-          href: job.absolute_url,
-        })
-      );
-      // console.log(`Scraped ${data.length} jobs from Workato`);
+      const data: Prisma.ZafranJobCreateInput[] = response.data.map((job) => ({
+        title: job.name,
+        location: job.location?.name || "No Location",
+        href: job.url_detected_page
+          ? job.url_detected_page
+          : job.url_active_page,
+      }));
+      // console.log(`Scraped ${data.length} jobs from Zafran`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class WorkatoJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.WorkatoJobCreateInput[]
+    jobData: Prisma.ZafranJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +79,8 @@ export class WorkatoJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Workato",
-      "https://www.workato.com/",
+      "Zafran Security",
+      "https://www.zafran.io/",
       2
     );
     return {
@@ -90,7 +90,7 @@ export class WorkatoJobHandler {
   }
 
   static async run() {
-    const handler = new WorkatoJobHandler();
+    const handler = new ZafranJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,8 +101,8 @@ export class WorkatoJobHandler {
   }
 }
 
-// WorkatoJobHandler.run().then((res) => {
+// ZafranJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
+//     await buildMessage(res.channel, res.blocks);
 //   }
 // });
