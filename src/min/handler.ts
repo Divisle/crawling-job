@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LogicGateJobRepository } from "./database";
+import { MinJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class LogicGateJobHandler {
-  constructor(private db = new LogicGateJobRepository(new PrismaClient())) {
+export class MinJobHandler {
+  constructor(private db = new MinJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class LogicGateJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.LogicGateJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.MinJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class LogicGateJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/logicgate/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/minio/jobs"
       );
-      const data: Prisma.LogicGateJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.MinJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from LogicGate`);
+      // console.log(`Scraped ${data.length} jobs from MinIO`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class LogicGateJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LogicGateJobCreateInput[]
+    jobData: Prisma.MinJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,12 +77,7 @@ export class LogicGateJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "LogicGate",
-      "https://www.logicgate.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "MinIO", "https://min.io/", 2);
     return {
       blocks,
       channel: 2,
@@ -90,7 +85,7 @@ export class LogicGateJobHandler {
   }
 
   static async run() {
-    const handler = new LogicGateJobHandler();
+    const handler = new MinJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,8 +96,8 @@ export class LogicGateJobHandler {
   }
 }
 
-// LogicGateJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+MinJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
