@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LakeraJobRepository } from "./database";
+import { LangChainJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class LakeraJobHandler {
-  constructor(private db = new LakeraJobRepository(new PrismaClient())) {
+export class LangChainJobHandler {
+  constructor(private db = new LangChainJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class LakeraJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.LakeraJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.LangChainJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "lakera.ai",
+        organizationHostedJobsPageName: "langchain",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class LakeraJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.LakeraJobCreateInput[] =
+      const data: Prisma.LangChainJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://www.lakera.ai/careers?ashby_jid=${posting.id}`,
+          href: `https://jobs.ashbyhq.com/langchain/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class LakeraJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LakeraJobCreateInput[]
+    jobData: Prisma.LangChainJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,7 +80,12 @@ export class LakeraJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Lakera", "https://www.lakera.ai/", 2);
+    const blocks = buildJobMessage(
+      data,
+      "LangChain",
+      "https://www.langchain.com/",
+      2
+    );
     return {
       blocks,
       channel: 2,
@@ -88,7 +93,7 @@ export class LakeraJobHandler {
   }
 
   static async run() {
-    const handler = new LakeraJobHandler();
+    const handler = new LangChainJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,8 +104,8 @@ export class LakeraJobHandler {
   }
 }
 
-// LakeraJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+LangChainJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
