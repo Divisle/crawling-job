@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { MedallionRepository } from "./database";
+import { ArmadaJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class MedallionJobHandler {
-  constructor(private db = new MedallionRepository(new PrismaClient())) {
+export class ArmadaJobHandler {
+  constructor(private db = new ArmadaJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,28 +16,30 @@ export class MedallionJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.MedallionJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.ArmadaJobCreateInput[]> {
     try {
       const response: {
         data: {
-          items: {
-            name: string;
-            locations: {
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
               name: string;
-            }[];
-            url: string;
+            };
           }[];
         };
       } = await axios.get(
-        "https://ats.rippling.com/api/v2/board/medallion-careers/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/armada/jobs"
       );
-      const data: Prisma.MedallionJobCreateInput[] = response.data.items.map(
-        (item) => ({
-          title: item.name,
-          location: item.locations[0].name,
-          href: item.url,
+      const data: Prisma.ArmadaJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url.replace("careers", "career"),
         })
       );
+      // console.log(`Scraped ${data.length} jobs from Armada`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
@@ -46,7 +48,7 @@ export class MedallionJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.MedallionJobCreateInput[]
+    jobData: Prisma.ArmadaJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -75,12 +77,7 @@ export class MedallionJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Medallion",
-      "https://medallion.co/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Armada", "https://www.armada.ai/", 2);
     return {
       blocks,
       channel: 2,
@@ -88,7 +85,7 @@ export class MedallionJobHandler {
   }
 
   static async run() {
-    const handler = new MedallionJobHandler();
+    const handler = new ArmadaJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,8 +96,8 @@ export class MedallionJobHandler {
   }
 }
 
-// MedallionJobHandler.run().then(async (res) => {
+// ArmadaJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
+//     buildMessage(res.channel, res.blocks);
 //   }
 // });

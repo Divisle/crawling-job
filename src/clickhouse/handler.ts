@@ -38,7 +38,7 @@ export class ClickHouseJobHandler {
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from SnorkelAI`);
+      // console.log(`Scraped ${data.length} jobs from ClickHouse`);
       // console.log(data);
       return data;
     } catch (error) {

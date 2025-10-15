@@ -104,8 +104,8 @@ export class ElevenlabsJobHandler {
   }
 }
 
-ElevenlabsJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// ElevenlabsJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

@@ -38,7 +38,7 @@ export class ContextualJobHandler {
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from SnorkelAI`);
+      // console.log(`Scraped ${data.length} jobs from Contextual`);
       // console.log(data);
       return data;
     } catch (error) {

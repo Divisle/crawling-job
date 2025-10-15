@@ -38,7 +38,7 @@ export class StacklokJobHandler {
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from SnorkelAI`);
+      // console.log(`Scraped ${data.length} jobs from Stacklok`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -101,8 +101,8 @@ export class StacklokJobHandler {
   }
 }
 
-StacklokJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// StacklokJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });

@@ -38,7 +38,7 @@ export class AponoJobHandler {
           href: job.absolute_url.replace("careers", "career"),
         })
       );
-      // console.log(`Scraped ${data.length} jobs from SnorkelAI`);
+      // console.log(`Scraped ${data.length} jobs from Apono`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -96,8 +96,8 @@ export class AponoJobHandler {
   }
 }
 
-AponoJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// AponoJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });
