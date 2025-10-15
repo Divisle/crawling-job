@@ -96,8 +96,8 @@ export class SgnlJobHandler {
   }
 }
 
-SgnlJobHandler.run().then((res) => {
-  if (res.blocks.length > 0) {
-    buildMessage(res.channel, res.blocks);
-  }
-});
+// SgnlJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });
