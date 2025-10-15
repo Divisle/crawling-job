@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { DataikuJobRepository } from "./database";
+import { EthycaJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class DataikuJobHandler {
-  constructor(private db = new DataikuJobRepository(new PrismaClient())) {
+export class EthycaJobHandler {
+  constructor(private db = new EthycaJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class DataikuJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.DataikuJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.EthycaJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class DataikuJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/dataiku/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/ethyca/jobs"
       );
-      const data: Prisma.DataikuJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.EthycaJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from Dataiku`);
+      // console.log(`Scraped ${data.length} jobs from Ethyca`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class DataikuJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.DataikuJobCreateInput[]
+    jobData: Prisma.EthycaJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,12 +77,7 @@ export class DataikuJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Dataiku",
-      "https://www.dataiku.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Ethyca", "https://ethyca.com/", 2);
     return {
       blocks,
       channel: 2,
@@ -90,7 +85,7 @@ export class DataikuJobHandler {
   }
 
   static async run() {
-    const handler = new DataikuJobHandler();
+    const handler = new EthycaJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,7 +96,7 @@ export class DataikuJobHandler {
   }
 }
 
-// DataikuJobHandler.run().then((res) => {
+// EthycaJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
