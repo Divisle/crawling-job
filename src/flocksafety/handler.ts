@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { FiddlerJobRepository } from "./database";
+import { FlockSafetyJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class FiddlerJobHandler {
-  constructor(private db = new FiddlerJobRepository(new PrismaClient())) {
+export class FlockSafetyJobHandler {
+  constructor(private db = new FlockSafetyJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class FiddlerJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.FiddlerJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.FlockSafetyJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "fiddler-ai",
+        organizationHostedJobsPageName: "Flock Safety",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class FiddlerJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.FiddlerJobCreateInput[] =
+      const data: Prisma.FlockSafetyJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/fiddler-ai/${posting.id}`,
+          href: `https://jobs.ashbyhq.com/Flock%20Safety/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class FiddlerJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.FiddlerJobCreateInput[]
+    jobData: Prisma.FlockSafetyJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -82,8 +82,8 @@ export class FiddlerJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Fiddler AI",
-      "https://www.fiddler.ai/",
+      "Flock Safety",
+      "https://www.flocksafety.com/",
       2
     );
     return {
@@ -93,7 +93,7 @@ export class FiddlerJobHandler {
   }
 
   static async run() {
-    const handler = new FiddlerJobHandler();
+    const handler = new FlockSafetyJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,8 +104,8 @@ export class FiddlerJobHandler {
   }
 }
 
-// FiddlerJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+FlockSafetyJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
