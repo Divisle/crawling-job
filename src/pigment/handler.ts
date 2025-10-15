@@ -1,13 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ObsidianSecurityJobRepository } from "./database";
+import { PigmentJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ObsidianSecurityJobHandler {
-  constructor(
-    private db = new ObsidianSecurityJobRepository(new PrismaClient())
-  ) {
+export class PigmentJobHandler {
+  constructor(private db = new PigmentJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -18,28 +16,21 @@ export class ObsidianSecurityJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ObsidianSecurityJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.PigmentJobCreateInput[]> {
     try {
       const response: {
         data: {
-          jobs: {
-            title: string;
-            absolute_url: string;
-            location: {
-              name: string;
-            };
-          }[];
-        };
-      } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/obsidiansecurity/jobs"
-      );
-      const data: Prisma.ObsidianSecurityJobCreateInput[] =
-        response.data.jobs.map((job) => ({
-          title: job.title,
-          location: job.location.name || "No Location",
-          href: job.absolute_url,
-        }));
-      // console.log(`Scraped ${data.length} jobs from Obsidian Security`);
+          categories: { location: string };
+          text: string;
+          hostedUrl: string;
+        }[];
+      } = await axios.get("https://api.lever.co/v0/postings/pigment?mode=json");
+      const data: Prisma.PigmentJobCreateInput[] = response.data.map((job) => ({
+        title: job.text,
+        location: job.categories.location || "No Location",
+        href: job.hostedUrl,
+      }));
+      // console.log(`Scraped ${data.length} jobs from Pigment`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -49,7 +40,7 @@ export class ObsidianSecurityJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ObsidianSecurityJobCreateInput[]
+    jobData: Prisma.PigmentJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,8 +71,8 @@ export class ObsidianSecurityJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Obsidian Security",
-      "https://www.obsidiansecurity.com/",
+      "Pigment",
+      "https://www.pigment.com/",
       2
     );
     return {
@@ -91,7 +82,7 @@ export class ObsidianSecurityJobHandler {
   }
 
   static async run() {
-    const handler = new ObsidianSecurityJobHandler();
+    const handler = new PigmentJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -102,7 +93,7 @@ export class ObsidianSecurityJobHandler {
   }
 }
 
-// ObsidianSecurityJobHandler.run().then((res) => {
+// PigmentJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
