@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { UnframeJobRepository } from "./database";
+import { WorkatoJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class UnframeJobHandler {
-  constructor(private db = new UnframeJobRepository(new PrismaClient())) {
+export class WorkatoJobHandler {
+  constructor(private db = new WorkatoJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class UnframeJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.UnframeJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.WorkatoJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class UnframeJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/unframe/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/workato/jobs"
       );
-      const data: Prisma.UnframeJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.WorkatoJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from Unframe`);
+      // console.log(`Scraped ${data.length} jobs from Workato`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class UnframeJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.UnframeJobCreateInput[]
+    jobData: Prisma.WorkatoJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +79,8 @@ export class UnframeJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Unframe AI",
-      "https://www.unframe.ai/",
+      "Workato",
+      "https://www.workato.com/",
       2
     );
     return {
@@ -90,7 +90,7 @@ export class UnframeJobHandler {
   }
 
   static async run() {
-    const handler = new UnframeJobHandler();
+    const handler = new WorkatoJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,8 +101,8 @@ export class UnframeJobHandler {
   }
 }
 
-// UnframeJobHandler.run().then((res) => {
-//   if (res.blocks.length > 0) {
-//     buildMessage(res.channel, res.blocks);
-//   }
-// });
+WorkatoJobHandler.run().then((res) => {
+  if (res.blocks.length > 0) {
+    buildMessage(res.channel, res.blocks);
+  }
+});
