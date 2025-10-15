@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { FlockSafetyJobRepository } from "./database";
+import { FyxerJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class FlockSafetyJobHandler {
-  constructor(private db = new FlockSafetyJobRepository(new PrismaClient())) {
+export class FyxerJobHandler {
+  constructor(private db = new FyxerJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class FlockSafetyJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.FlockSafetyJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.FyxerJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "Flock Safety",
+        organizationHostedJobsPageName: "fyxer",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class FlockSafetyJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.FlockSafetyJobCreateInput[] =
+      const data: Prisma.FyxerJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/Flock%20Safety/${posting.id}`,
+          href: `https://jobs.ashbyhq.com/fyxer/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class FlockSafetyJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.FlockSafetyJobCreateInput[]
+    jobData: Prisma.FyxerJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,12 +80,7 @@ export class FlockSafetyJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Flock Safety",
-      "https://www.flocksafety.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Fyxer", "https://www.fyxer.com/", 2);
     return {
       blocks,
       channel: 2,
@@ -93,7 +88,7 @@ export class FlockSafetyJobHandler {
   }
 
   static async run() {
-    const handler = new FlockSafetyJobHandler();
+    const handler = new FyxerJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,8 +99,8 @@ export class FlockSafetyJobHandler {
   }
 }
 
-// FlockSafetyJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+FyxerJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
