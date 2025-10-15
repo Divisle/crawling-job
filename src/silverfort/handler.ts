@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ScylladbJobRepository } from "./database";
+import { SilverFortJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ScylladbJobHandler {
-  constructor(private db = new ScylladbJobRepository(new PrismaClient())) {
+export class SilverFortJobHandler {
+  constructor(private db = new SilverFortJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class ScylladbJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ScylladbJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SilverFortJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -28,14 +28,14 @@ export class ScylladbJobHandler {
           uid: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/E4.006/positions?token=4E6187E1D64224A0013984E60187E"
+        "https://www.comeet.co/careers-api/2.0/company/54.007/positions?token=45715B315B38AE22B8D051A0A457D051E61"
       );
-      const data: Prisma.ScylladbJobCreateInput[] = response.data.map(
+      const data: Prisma.SilverFortJobCreateInput[] = response.data.map(
         (job) => ({
           title: job.name,
           location: job.location?.name || "No Location",
           href:
-            "https://www.scylladb.com/company/careers/job-openings/co/" +
+            "https://www.silverfort.com/careers/co/" +
             job.location.name
               .replaceAll(" ", "-")
               .replaceAll("(", "")
@@ -45,12 +45,12 @@ export class ScylladbJobHandler {
             job.uid +
             "/" +
             job.url_active_page
-              .replaceAll("https://www.comeet.com/jobs/scylladb/E4.006/", "")
+              .replaceAll("https://www.comeet.com/jobs/silverfort/54.007/", "")
               .replaceAll(job.uid, "") +
             "/all",
         })
       );
-      // console.log(`Scraped ${data.length} jobs from ScyllaDB`);
+      // console.log(`Scraped ${data.length} jobs from SilverFort`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -60,7 +60,7 @@ export class ScylladbJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ScylladbJobCreateInput[]
+    jobData: Prisma.SilverFortJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -91,8 +91,8 @@ export class ScylladbJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "ScyllaDB",
-      "https://www.scylladb.com/",
+      "Silver Fort",
+      "https://www.silverfort.com/",
       2
     );
     return {
@@ -102,7 +102,7 @@ export class ScylladbJobHandler {
   }
 
   static async run() {
-    const handler = new ScylladbJobHandler();
+    const handler = new SilverFortJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -113,8 +113,8 @@ export class ScylladbJobHandler {
   }
 }
 
-// ScylladbJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+SilverFortJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
