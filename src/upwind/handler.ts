@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { SilverFortJobRepository } from "./database";
+import { UpwindJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class SilverFortJobHandler {
-  constructor(private db = new SilverFortJobRepository(new PrismaClient())) {
+export class UpwindJobHandler {
+  constructor(private db = new UpwindJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class SilverFortJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.SilverFortJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.UpwindJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -26,31 +26,25 @@ export class SilverFortJobHandler {
           };
           url_active_page: string;
           uid: string;
+          url_detected_page: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/54.007/positions?token=45715B315B38AE22B8D051A0A457D051E61"
+        "https://www.comeet.co/careers-api/2.0/company/49.004/positions?token=94440DC0944094401BCC12882510"
       );
-      const data: Prisma.SilverFortJobCreateInput[] = response.data.map(
-        (job) => ({
-          title: job.name,
-          location: job.location?.name || "No Location",
-          href:
-            "https://www.silverfort.com/careers/co/" +
-            job.location.name
-              .replaceAll(" ", "-")
-              .replaceAll("(", "")
-              .replaceAll(")", "")
-              .toLowerCase() +
-            "/" +
+      const data: Prisma.UpwindJobCreateInput[] = response.data.map((job) => ({
+        title: job.name,
+        location: job.location?.name || "No Location",
+        href: job.url_detected_page
+          ? job.url_detected_page
+          : "https://www.upwind.io/careers/co/iceland/" +
             job.uid +
             "/" +
             job.url_active_page
-              .replaceAll("https://www.comeet.com/jobs/silverfort/54.007/", "")
+              .replaceAll("https://www.comeet.com/jobs/upwind/49.004/", "")
               .replaceAll(job.uid, "") +
             "/all",
-        })
-      );
-      // console.log(`Scraped ${data.length} jobs from SilverFort`);
+      }));
+      // console.log(`Scraped ${data.length} jobs from Upwind`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -60,7 +54,7 @@ export class SilverFortJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.SilverFortJobCreateInput[]
+    jobData: Prisma.UpwindJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -89,12 +83,7 @@ export class SilverFortJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Silver Fort",
-      "https://www.silverfort.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Upwind", "https://www.upwind.io/", 2);
     return {
       blocks,
       channel: 2,
@@ -102,7 +91,7 @@ export class SilverFortJobHandler {
   }
 
   static async run() {
-    const handler = new SilverFortJobHandler();
+    const handler = new UpwindJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -113,7 +102,7 @@ export class SilverFortJobHandler {
   }
 }
 
-// SilverFortJobHandler.run().then(async (res) => {
+// UpwindJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
