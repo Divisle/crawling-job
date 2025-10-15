@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ResolveJobRepository } from "./database";
+import { SeonJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ResolveJobHandler {
-  constructor(private db = new ResolveJobRepository(new PrismaClient())) {
+export class SeonJobHandler {
+  constructor(private db = new SeonJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class ResolveJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ResolveJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SeonJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "Resolve AI",
+        organizationHostedJobsPageName: "seon",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class ResolveJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.ResolveJobCreateInput[] =
+      const data: Prisma.SeonJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/Resolve%20AI/${posting.id}`,
+          href: `https://seon.io/careers/?ashby_jid=${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class ResolveJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ReplicateJobCreateInput[]
+    jobData: Prisma.SeonJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,7 +80,7 @@ export class ResolveJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Resolve", "https://resolve.ai/", 2);
+    const blocks = buildJobMessage(data, "Seon", "https://seon.io/", 2);
     return {
       blocks,
       channel: 2,
@@ -88,7 +88,7 @@ export class ResolveJobHandler {
   }
 
   static async run() {
-    const handler = new ResolveJobHandler();
+    const handler = new SeonJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,7 +99,7 @@ export class ResolveJobHandler {
   }
 }
 
-// ResolveJobHandler.run().then(async (res) => {
+// SeonJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }

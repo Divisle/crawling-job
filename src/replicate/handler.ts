@@ -104,8 +104,8 @@ export class ReplicateJobHandler {
   }
 }
 
-ReplicateJobHandler.run().then(async (res) => {
-  if (res.blocks.length > 0) {
-    await buildMessage(res.channel, res.blocks);
-  }
-});
+// ReplicateJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });
