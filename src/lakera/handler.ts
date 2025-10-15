@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { KognitosJobRepository } from "./database";
+import { LakeraJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class KognitosJobHandler {
-  constructor(private db = new KognitosJobRepository(new PrismaClient())) {
+export class LakeraJobHandler {
+  constructor(private db = new LakeraJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class KognitosJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.KognitosJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.LakeraJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "Kognitos",
+        organizationHostedJobsPageName: "lakera.ai",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class KognitosJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.KognitosJobCreateInput[] =
+      const data: Prisma.LakeraJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://www.kognitos.com/careers/?ashby_jid=${posting.id}`,
+          href: `https://www.lakera.ai/careers?ashby_jid=${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class KognitosJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.KognitosJobCreateInput[]
+    jobData: Prisma.LakeraJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,12 +80,7 @@ export class KognitosJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Kognitos",
-      "https://www.kognitos.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Lakera", "https://www.lakera.ai/", 2);
     return {
       blocks,
       channel: 2,
@@ -93,7 +88,7 @@ export class KognitosJobHandler {
   }
 
   static async run() {
-    const handler = new KognitosJobHandler();
+    const handler = new LakeraJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,8 +99,8 @@ export class KognitosJobHandler {
   }
 }
 
-// KognitosJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+LakeraJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
