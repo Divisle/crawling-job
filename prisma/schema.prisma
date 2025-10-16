@@ -1759,3 +1759,21 @@ model WorldJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model DustJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DaylightJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
