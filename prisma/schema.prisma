@@ -1606,3 +1606,12 @@ model DeepgramJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model FernJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
