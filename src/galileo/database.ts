@@ -42,9 +42,7 @@ export class GalileoRepository {
     const existingJobs = await this.getAll();
 
     data.forEach((job) => {
-      const existingJob = existingJobs.find(
-        (j) => j.href === job.href && j.location === job.location
-      );
+      const existingJob = existingJobs.find((j) => j.href === job.href);
       if (existingJob) {
         if (existingJob.title === job.title) {
         } else {
@@ -64,9 +62,7 @@ export class GalileoRepository {
       }
     });
     existingJobs.forEach((job) => {
-      const locExists = data.find(
-        (j) => j.href === job.href && j.location === job.location
-      );
+      const locExists = data.find((j) => j.href === job.href);
       if (!locExists) {
         deleteJobs.push({
           id: job.id,
