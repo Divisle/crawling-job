@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { DatavisorJobRepository } from "./database";
+import { TatumJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class DatavisorJobHandler {
-  constructor(private db = new DatavisorJobRepository(new PrismaClient())) {
+export class TatumJobHandler {
+  constructor(private db = new TatumJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class DatavisorJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.DatavisorJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.TatumJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,9 +29,9 @@ export class DatavisorJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://apply.workable.com/api/v1/widget/accounts/56790"
+        "https://apply.workable.com/api/v1/widget/accounts/534471"
       );
-      const data: Prisma.DatavisorJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.TatumJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location:
@@ -41,7 +41,7 @@ export class DatavisorJobHandler {
           href: job.url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from Datavisor`);
+      // console.log(`Scraped ${data.length} jobs from Tatum`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class DatavisorJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.DatavisorJobCreateInput[]
+    jobData: Prisma.TatumJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,12 +80,7 @@ export class DatavisorJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(
-      data,
-      "Datavisor",
-      "https://www.datavisor.com/",
-      2
-    );
+    const blocks = buildJobMessage(data, "Tatum", "https://tatum.io/", 2);
     return {
       blocks,
       channel: 2,
@@ -93,7 +88,7 @@ export class DatavisorJobHandler {
   }
 
   static async run() {
-    const handler = new DatavisorJobHandler();
+    const handler = new TatumJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,7 +99,7 @@ export class DatavisorJobHandler {
   }
 }
 
-// DatavisorJobHandler.run().then((res) => {
+// TatumJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
