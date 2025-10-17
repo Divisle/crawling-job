@@ -85,7 +85,7 @@ export class SuperAIJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "SuperAI", "https://super.ai/", 2);
+    const blocks = buildJobMessage(data, "Super AI", "https://super.ai/", 2);
     return {
       blocks,
       channel: 2,
