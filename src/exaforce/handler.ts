@@ -1,14 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { OpsinJobRepository } from "./database";
+import { ExaforceJobRepository } from "./database";
 import { buildJobMessage, JobMessageData } from "../template";
 import { Builder, By, WebDriver } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
 import { buildMessage } from "../global";
 
-export class OpsinJobHandler {
+export class ExaforceJobHandler {
   private driver: WebDriver;
 
-  constructor(private db = new OpsinJobRepository(new PrismaClient())) {
+  constructor(private db = new ExaforceJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -45,24 +45,31 @@ export class OpsinJobHandler {
       .build();
   }
 
-  async scrapeJobs(): Promise<Prisma.OpsinJobCreateInput[]> {
-    await this.driver.get("https://www.opsinsecurity.com/careers");
-    const data: Prisma.OpsinJobCreateInput[] = [];
+  async scrapeJobs(): Promise<Prisma.ExaforceJobCreateInput[]> {
+    await this.driver.get("https://www.exaforce.com/careers");
+    const data: Prisma.ExaforceJobCreateInput[] = [];
     const listElements = await this.driver.findElements(
-      By.xpath("//div[@class='open-positions-block']//div[@role='listitem']//a")
+      By.xpath("//div[@class='careers_cms w-dyn-list']//a")
     );
-    for (const jobElement of listElements) {
-      const title = (await jobElement.getText()).replaceAll(/\n(.*)/g, "");
-      const href = await jobElement.getAttribute("href");
-      const location = "San Jose, CA / SF Bay Area (hybrid)";
+    for (let i = 0; i < listElements.length; i++) {
+      const jobElement = this.driver
+        .findElements(By.xpath("//div[@class='careers_cms w-dyn-list']//a"))
+        .then((elements) => elements[i]);
+      const href = await (await jobElement).getAttribute("href");
+      const title = await (await jobElement)
+        .findElement(By.xpath(".//h2"))
+        .getText();
+      const location = await (await jobElement)
+        .findElement(By.xpath(".//p"))
+        .getText();
       data.push({ title, location, href });
     }
-    // console.log(`Scraped ${data.length} jobs from Opsin Security`);
+    // console.log(`Scraped ${data.length} jobs from Exaforce Security`);
     // console.log(data);
     return data;
   }
 
-  async filterData(data: Prisma.OpsinJobCreateInput[]) {
+  async filterData(data: Prisma.ExaforceJobCreateInput[]) {
     const filteredData = await this.db.compareData(data);
     const listDeleteId = [
       ...filteredData.deleteJobs.map((job) => job.id as string),
@@ -80,7 +87,7 @@ export class OpsinJobHandler {
     return filteredData.newJobs;
   }
 
-  async sendMessage(data: Prisma.OpsinJobCreateInput[]) {
+  async sendMessage(data: Prisma.ExaforceJobCreateInput[]) {
     const jobs: JobMessageData[] = data.map((jobData) => {
       return {
         location: jobData.location,
@@ -90,7 +97,7 @@ export class OpsinJobHandler {
     });
     const blocks = buildJobMessage(
       jobs,
-      "Opsin Security",
+      "Exaforce",
       "https://www.opsinsecurity.com/",
       2
     );
@@ -102,7 +109,7 @@ export class OpsinJobHandler {
   }
 
   static async run() {
-    const handler = new OpsinJobHandler();
+    const handler = new ExaforceJobHandler();
     const jobData = await handler.scrapeJobs();
     const filteredData = await handler.filterData(jobData);
     if (filteredData.length === 0) {
@@ -115,7 +122,7 @@ export class OpsinJobHandler {
   }
 }
 
-// OpsinJobHandler.run().then((res) => {
+// ExaforceJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
