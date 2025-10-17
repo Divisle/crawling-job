@@ -107,11 +107,11 @@ async function test_message() {
 
   // Send to active channel
   console.log("Sending test message to active channel...");
-  await buildMessage(2, active_channel_blocks);
+  await buildMessage(1, active_channel_blocks);
 
   // Send to prospect channel
   console.log("Sending test message to prospect channel...");
-  await buildMessage(1, prospect_channel_blocks);
+  await buildMessage(2, prospect_channel_blocks);
 }
 
 async function runScraperSafely(
@@ -315,12 +315,12 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-// main().catch((error) => {
-//   console.error("💥 Main function failed:", error);
-//   process.exit(1);
-// });
-
-test_message().catch((error) => {
-  console.error("💥 Test message function failed:", error);
+main().catch((error) => {
+  console.error("💥 Main function failed:", error);
   process.exit(1);
 });
+
+// test_message().catch((error) => {
+//   console.error("💥 Test message function failed:", error);
+//   process.exit(1);
+// });
