@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { OrkesJobRepository } from "./database";
+import { MindsdbJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class OrkesJobHandler {
-  constructor(private db = new OrkesJobRepository(new PrismaClient())) {
+export class MindsdbJobHandler {
+  constructor(private db = new MindsdbJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,7 +16,7 @@ export class OrkesJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.OrkesJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.MindsdbJobCreateInput[]> {
     try {
       const response: {
         data: {
@@ -29,16 +29,16 @@ export class OrkesJobHandler {
           }[];
         };
       } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/orkes/jobs"
+        "https://boards-api.greenhouse.io/v1/boards/mindsdb/jobs"
       );
-      const data: Prisma.OrkesJobCreateInput[] = response.data.jobs.map(
+      const data: Prisma.MindsdbJobCreateInput[] = response.data.jobs.map(
         (job) => ({
           title: job.title,
           location: job.location.name || "No Location",
           href: job.absolute_url,
         })
       );
-      // console.log(`Scraped ${data.length} jobs from Orkes`);
+      // console.log(`Scraped ${data.length} jobs from Mindsdb`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -48,7 +48,7 @@ export class OrkesJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.OrkesJobCreateInput[]
+    jobData: Prisma.MindsdbJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -77,7 +77,7 @@ export class OrkesJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Orkes", "https://orkes.io/", 2);
+    const blocks = buildJobMessage(data, "MindsDB", "https://mindsdb.com/", 2);
     return {
       blocks,
       channel: 2,
@@ -85,7 +85,7 @@ export class OrkesJobHandler {
   }
 
   static async run() {
-    const handler = new OrkesJobHandler();
+    const handler = new MindsdbJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -96,7 +96,7 @@ export class OrkesJobHandler {
   }
 }
 
-// OrkesJobHandler.run().then((res) => {
+// MindsdbJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
