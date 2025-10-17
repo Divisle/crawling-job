@@ -84,6 +84,36 @@ import {
 } from "./src";
 import { buildMessage } from "./src/global";
 
+async function test_message() {
+  const active_channel_blocks = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "This is a test message from the job scraper to active channel !",
+      },
+    },
+  ];
+
+  const prospect_channel_blocks = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "This is a test message from the job scraper to prospect channel !",
+      },
+    },
+  ];
+
+  // Send to active channel
+  console.log("Sending test message to active channel...");
+  await buildMessage(2, active_channel_blocks);
+
+  // Send to prospect channel
+  console.log("Sending test message to prospect channel...");
+  await buildMessage(1, prospect_channel_blocks);
+}
+
 async function runScraperSafely(
   scraperName: string,
   scraperFunction: () => Promise<{
@@ -285,7 +315,12 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-main().catch((error) => {
-  console.error("💥 Main function failed:", error);
+// main().catch((error) => {
+//   console.error("💥 Main function failed:", error);
+//   process.exit(1);
+// });
+
+test_message().catch((error) => {
+  console.error("💥 Test message function failed:", error);
   process.exit(1);
 });
