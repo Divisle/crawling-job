@@ -1,17 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Builder, By, WebDriver } from "selenium-webdriver";
-import { Options } from "selenium-webdriver/chrome.js";
 import { EnterpretJobRepository } from "./database";
-import {
-  buildDefaultJobMessage,
-  buildJobMessage,
-  DefaultJobMessageData,
-  JobMessageData,
-} from "../template";
+import { JobMessageData, buildJobMessage } from "../template";
+import axios from "axios";
 import { buildMessage } from "../global";
 
-export class EnterpretJobScraper {
-  private driver: WebDriver;
+export class EnterpretJobHandler {
   constructor(private db = new EnterpretJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
@@ -21,140 +14,95 @@ export class EnterpretJobScraper {
       console.log("SLACK_FIRST_CHANNEL_ID is not defined");
       return process.exit(1);
     }
-
-    const options = new Options();
-    options.addArguments(
-      `--user-data-dir=/tmp/chrome_${Date.now()}_${Math.random()
-        .toString(36)
-        .substring(2, 11)}`
-    );
-    options.addArguments("--headless");
-    options.addArguments("--no-sandbox");
-    options.addArguments("--disable-dev-shm-usage");
-    options.addArguments("--disable-gpu");
-
-    this.driver = new Builder()
-      .forBrowser("chrome")
-      .setChromeOptions(options)
-      .build();
   }
 
   async scrapeJobs(): Promise<Prisma.EnterpretJobCreateInput[]> {
-    await this.driver.get("https://job-boards.greenhouse.io/enterpret");
-    const departmentElements = await this.driver.findElements(
-      By.xpath("//div[@class='job-posts--table--department']")
-    );
-    const jobData: Prisma.EnterpretJobCreateInput[] = [];
-    for (const departmentElement of departmentElements) {
-      const department = await departmentElement
-        .findElement(By.xpath(".//h3"))
-        .getText();
-      const listJobElements = await departmentElement.findElements(
-        By.xpath(".//tbody//tr")
+    try {
+      const response: {
+        data: {
+          jobs: {
+            title: string;
+            absolute_url: string;
+            location: {
+              name: string;
+            };
+          }[];
+        };
+      } = await axios.get(
+        "https://boards-api.greenhouse.io/v1/boards/enterpret/jobs"
       );
-      for (const jobElement of listJobElements) {
-        const href = await jobElement
-          .findElement(By.xpath(".//a"))
-          .getAttribute("href");
-        const title = await jobElement
-          .findElement(By.xpath(".//p[@class='body body--medium']"))
-          .getText();
-        const location = await jobElement
-          .findElement(
-            By.xpath(".//p[@class='body body__secondary body--metadata']")
-          )
-          .getText();
-
-        jobData.push({ href, title, location, department });
-      }
+      const data: Prisma.EnterpretJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
+          title: job.title,
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
+        })
+      );
+      // console.log(`Scraped ${data.length} jobs from Enterpret`);
+      // console.log(data);
+      return data;
+    } catch (error) {
+      console.error("Error scraping jobs:", error);
+      return [];
     }
-    return jobData;
   }
 
   async filterData(
     jobData: Prisma.EnterpretJobCreateInput[]
-  ): Promise<DefaultJobMessageData> {
+  ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
       ...filterData.deleteJobs.map((job) => job.id!),
       ...filterData.updateJobs.map((job) => job.id!),
     ];
-    const listNewData = [
+    const listCreateData = [
       ...filterData.newJobs,
-      ...filterData.updateJobs.map((job) => {
-        const { id, ...rest } = job;
-        return rest;
-      }),
+      ...filterData.updateJobs.map((job) => ({
+        title: job.title,
+        location: job.location,
+        href: job.href,
+      })),
     ];
-    await this.db.deleteMany(listDeleteId);
-    await this.db.createMany(listNewData);
-
-    const messageData = {
-      newJobs: filterData.newJobs.map((e) => {
-        return {
-          title: e.title,
-          location: e.location,
-          department: e.department,
-          href: e.href,
-        };
-      }),
-      deleteJobs: filterData.deleteJobs.map((e) => {
-        return {
-          title: e.title,
-          location: e.location,
-          department: e.department,
-          href: e.href,
-        };
-      }),
-      updateJobs: filterData.updateJobs.map((e) => {
-        return {
-          title: e.title,
-          location: e.location,
-          department: e.department,
-          href: e.href,
-        };
-      }),
-    };
-    return messageData;
-  }
-
-  async sendMessage(data: DefaultJobMessageData) {
-    const jobDatas: JobMessageData[] = data.newJobs.map((job) => ({
+    if (listDeleteId.length !== 0) {
+      await this.db.deleteMany(listDeleteId);
+    }
+    if (listCreateData.length !== 0) {
+      await this.db.createMany(listCreateData);
+    }
+    return filterData.newJobs.map((job) => ({
       location: job.location,
       title: job.title,
       href: job.href,
     }));
+  }
+
+  async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
-      jobDatas,
+      data,
       "Enterpret",
       "https://www.enterpret.com/",
       2
     );
-    return { blocks, channel: 2 };
+    return {
+      blocks,
+      channel: 2,
+    };
   }
 
   static async run() {
-    const scraper = new EnterpretJobScraper();
-    const jobData = await scraper.scrapeJobs();
-    // console.log(`Scraped ${jobData.length} jobs from Enterpret.`);
-    // console.log(jobData);
-    const filteredData = await scraper.filterData(jobData);
-    if (
-      filteredData.newJobs.length === 0 &&
-      filteredData.updateJobs.length === 0 &&
-      filteredData.deleteJobs.length === 0
-    ) {
+    const handler = new EnterpretJobHandler();
+    const data = await handler.scrapeJobs();
+    const filteredData = await handler.filterData(data);
+    if (filteredData.length === 0) {
       console.log("No job changes detected.");
-      await scraper.close();
       return { blocks: [] as any[], channel: 0 };
     }
-    await scraper.close();
-    return await scraper.sendMessage(filteredData);
-  }
-
-  async close() {
-    await this.driver.quit();
+    return await handler.sendMessage(filteredData);
   }
 }
 
-// EnterpretJobScraper.run();
+// EnterpretJobHandler.run().then((res) => {
+//   if (res.blocks.length > 0) {
+//     buildMessage(res.channel, res.blocks);
+//   }
+// });

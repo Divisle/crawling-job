@@ -204,7 +204,6 @@ model LoopJob {
 model EnterpretJob {
   id          String   @id @default(uuid())
   title       String
-  department  String
   location    String
   href        String  @unique
   createdAt   DateTime @default(now())
