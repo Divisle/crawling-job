@@ -310,18 +310,20 @@ async function main() {
   } else {
     console.log("📭 No messages to send to channel 1.");
   }
-  if (messageBlocks2.length > 0) {
-    console.log(
-      `📨 Sending accumulated message to channel 2 with ${messageBlocks2.length} blocks from ${messageChannel2} scrapers.`
-    );
-    try {
-      await buildMessage(2, messageBlocks2);
-    } catch (error) {
-      console.error("💥 Failed to send message to channel 2:", error);
-    }
-  } else {
-    console.log("📭 No messages to send to channel 2.");
-  }
+  // if (messageBlocks2.length > 0) {
+  //   console.log(
+  //     `📨 Sending accumulated message to channel 2 with ${messageBlocks2.length} blocks from ${messageChannel2} scrapers.`
+  //   );
+  //   try {
+  //     await buildMessage(2, messageBlocks2);
+  //   } catch (error) {
+  //     console.error("💥 Failed to send message to channel 2:", error);
+  //   }
+  // } else {
+  //   console.log("📭 No messages to send to channel 2.");
+  // }
+
+  console.log("Disabling channel 2 message sending for now.");
 
   console.log("─".repeat(50));
   console.timeEnd("Total Scraping Time");
