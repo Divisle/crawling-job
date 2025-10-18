@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ConductJobRepository } from "./database";
+import { SynthflowJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,8 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class ConductJobHandler {
-  constructor(private db = new ConductJobRepository(new PrismaClient())) {
+export class SynthflowJobHandler {
+  constructor(private db = new SynthflowJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,11 +20,11 @@ export class ConductJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.ConductJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.SynthflowJobCreateInput[]> {
     const payload = {
       operationName: "ApiJobBoardWithTeams",
       variables: {
-        organizationHostedJobsPageName: "conduct",
+        organizationHostedJobsPageName: "synthflow",
       },
       query:
         "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
@@ -37,11 +37,11 @@ export class ConductJobHandler {
         "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
         payload
       );
-      const data: Prisma.ConductJobCreateInput[] =
+      const data: Prisma.SynthflowJobCreateInput[] =
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/conduct/${posting.id}`,
+          href: `https://jobs.ashbyhq.com/synthflow/${posting.id}`,
         }));
       return data;
     } catch (error) {
@@ -51,7 +51,7 @@ export class ConductJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ConductJobCreateInput[]
+    jobData: Prisma.SynthflowJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -82,8 +82,8 @@ export class ConductJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Conduct AI",
-      "https://www.conduct.ai/",
+      "Synthflow AI",
+      "https://synthflow.ai/",
       1
     );
     return {
@@ -93,7 +93,7 @@ export class ConductJobHandler {
   }
 
   static async run() {
-    const handler = new ConductJobHandler();
+    const handler = new SynthflowJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -104,7 +104,7 @@ export class ConductJobHandler {
   }
 }
 
-// ConductJobHandler.run().then(async (res) => {
+// SynthflowJobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
