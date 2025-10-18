@@ -84,11 +84,11 @@ export class ZipsecJobHandler {
       data,
       "Zip Security",
       "https://www.zipsec.com/",
-      2
+      1
     );
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 

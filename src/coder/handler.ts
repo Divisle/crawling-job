@@ -80,10 +80,10 @@ export class CoderJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Coder", "https://coder.com/", 2);
+    const blocks = buildJobMessage(data, "Coder", "https://coder.com/", 1);
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 
