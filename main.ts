@@ -81,6 +81,21 @@ import {
   WatershedJobHandler,
   WorkOSJobHandler,
   YoobicScraper,
+  CoderabbitJobHandler,
+  LinxJobHandler,
+  VClusterJobHandler,
+  OscilarJobHandler,
+  PrimeSecurityJobHandler,
+  SpectrocloudScraper,
+  VelotixJobHandler,
+  VercelJobHandler,
+  RoxJobHandler,
+  ConductJobHandler,
+  SynthflowJobHandler,
+  EndeavorJobHandler,
+  ChronosphereJobHandler,
+  ZenityJobHandler,
+  CoderJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -244,6 +259,21 @@ async function main() {
     { name: "Watershed", run: () => WatershedJobHandler.run() },
     { name: "WorkOS", run: () => WorkOSJobHandler.run() },
     { name: "Yoobic", run: () => YoobicScraper.run() },
+    { name: "CodeRabbit", run: () => CoderabbitJobHandler.run() },
+    { name: "Linx", run: () => LinxJobHandler.run() },
+    { name: "VCluster", run: () => VClusterJobHandler.run() },
+    { name: "Oscilar", run: () => OscilarJobHandler.run() },
+    { name: "PrimeSecurity", run: () => PrimeSecurityJobHandler.run() },
+    { name: "SpectroCloud", run: () => SpectrocloudScraper.run() },
+    { name: "Velotix", run: () => VelotixJobHandler.run() },
+    { name: "Vercel", run: () => VercelJobHandler.run() },
+    { name: "Rox", run: () => RoxJobHandler.run() },
+    { name: "Conduct", run: () => ConductJobHandler.run() },
+    { name: "Synthflow", run: () => SynthflowJobHandler.run() },
+    { name: "Endeavor", run: () => EndeavorJobHandler.run() },
+    { name: "Chronosphere", run: () => ChronosphereJobHandler.run() },
+    { name: "Zenity", run: () => ZenityJobHandler.run() },
+    { name: "Coder", run: () => CoderJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);

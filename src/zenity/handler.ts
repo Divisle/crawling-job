@@ -77,10 +77,10 @@ export class ZenityJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "Zenity", "https://www.zenity.io/", 2);
+    const blocks = buildJobMessage(data, "Zenity", "https://www.zenity.io/", 1);
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 
