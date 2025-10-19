@@ -2304,3 +2304,12 @@ model PylonJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model BasisJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
