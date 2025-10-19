@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { HarperJobRepository } from "./database";
+import { HadriusJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class HarperJobHandler {
-  constructor(private db = new HarperJobRepository(new PrismaClient())) {
+export class HadriusJobHandler {
+  constructor(private db = new HadriusJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,11 +16,11 @@ export class HarperJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.HarperJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.HadriusJobCreateInput[]> {
     try {
       const response: {
         data: string;
-      } = await axios.get("https://www.ycombinator.com/companies/harper/jobs");
+      } = await axios.get("https://www.ycombinator.com/companies/hadrius/jobs");
       const responseParsed: {
         props: {
           jobPostings: {
@@ -36,7 +36,7 @@ export class HarperJobHandler {
           .split('" data-reactroot="">')[0]
           .replaceAll("&quot;", '"')
       );
-      const data: Prisma.HarperJobCreateInput[] =
+      const data: Prisma.HadriusJobCreateInput[] =
         responseParsed.props.jobPostings.map((posting) => {
           return {
             title: posting.title,
@@ -44,7 +44,7 @@ export class HarperJobHandler {
             href: `https://www.ycombinator.com${posting.url}`,
           };
         });
-      // console.log(`Scraped ${data.length} jobs from Harper`);
+      // console.log(`Scraped ${data.length} jobs from Hadrius`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -54,7 +54,7 @@ export class HarperJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.HarperJobCreateInput[]
+    jobData: Prisma.HadriusJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -85,8 +85,8 @@ export class HarperJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Harper",
-      "https://harperinsure.com/",
+      "Hadrius",
+      "https://www.hadrius.com/",
       2
     );
     return {
@@ -96,7 +96,7 @@ export class HarperJobHandler {
   }
 
   static async run() {
-    const handler = new HarperJobHandler();
+    const handler = new HadriusJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -107,7 +107,7 @@ export class HarperJobHandler {
   }
 }
 
-// HarperJobHandler.run().then((res) => {
+// HadriusJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
