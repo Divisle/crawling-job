@@ -2376,3 +2376,14 @@ model TraversalJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model AlbertinventJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([location, href])
+}
