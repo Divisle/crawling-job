@@ -141,3 +141,4 @@ vite.config.ts.timestamp-*
 /src/generated/prisma
 
 temp.ts
+temp.json
