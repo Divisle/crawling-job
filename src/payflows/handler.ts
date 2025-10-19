@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { InstruqtJobRepository } from "./database";
+import { PayflowsJobRepository } from "./database";
 import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class InstruqtJobHandler {
-  constructor(private db = new InstruqtJobRepository(new PrismaClient())) {
+export class PayflowsJobHandler {
+  constructor(private db = new PayflowsJobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -16,11 +16,11 @@ export class InstruqtJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.InstruqtJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.PayflowsJobCreateInput[]> {
     try {
       const response: {
         data: string;
-      } = await axios.get("https://instruqt.recruitee.com/");
+      } = await axios.get("https://payflows.recruitee.com/");
       const responseParsed: {
         appConfig: {
           offers: {
@@ -51,7 +51,7 @@ export class InstruqtJobHandler {
           .split('"><div></div>')[0]
           .replaceAll("&quot;", '"')
       );
-      const data: Prisma.InstruqtJobCreateInput[] =
+      const data: Prisma.PayflowsJobCreateInput[] =
         responseParsed.appConfig.offers.map((offer) => {
           const title = offer.translations["en"].title;
           const slug = offer.slug;
@@ -67,10 +67,10 @@ export class InstruqtJobHandler {
           return {
             title,
             location: location || "Remote",
-            href: `https://instruqt.recruitee.com/o/${slug}`,
+            href: `https://payflows.recruitee.com/o/${slug}`,
           };
         });
-      // console.log(`Scraped ${data.length} jobs from Instruqt`);
+      // console.log(`Scraped ${data.length} jobs from Payflows`);
       // console.log(data);
       return data;
     } catch (error) {
@@ -80,7 +80,7 @@ export class InstruqtJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.InstruqtJobCreateInput[]
+    jobData: Prisma.PayflowsJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -111,8 +111,8 @@ export class InstruqtJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Instruqt",
-      "https://instruqt.com/",
+      "Payflows",
+      "https://www.payflows.io/",
       2
     );
     return {
@@ -122,7 +122,7 @@ export class InstruqtJobHandler {
   }
 
   static async run() {
-    const handler = new InstruqtJobHandler();
+    const handler = new PayflowsJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -133,7 +133,7 @@ export class InstruqtJobHandler {
   }
 }
 
-// InstruqtJobHandler.run().then((res) => {
+// PayflowsJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
 //     buildMessage(res.channel, res.blocks);
 //   }
