@@ -260,6 +260,11 @@ import {
   GreenliteJobHandler,
   FurtherJobHandler,
   EloquentJobHandler,
+  BraintrustJobHandler,
+  DropzoneJobHandler,
+  BluefishJobHandler,
+  RunzeroJobHandler,
+  EchosoftwareJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -602,6 +607,11 @@ async function main() {
     { name: "Greenlite", run: () => GreenliteJobHandler.run() },
     { name: "Further", run: () => FurtherJobHandler.run() },
     { name: "Eloquent", run: () => EloquentJobHandler.run() },
+    { name: "Braintrust", run: () => BraintrustJobHandler.run() },
+    { name: "Dropzone", run: () => DropzoneJobHandler.run() },
+    { name: "Bluefish", run: () => BluefishJobHandler.run() },
+    { name: "RunZero", run: () => RunzeroJobHandler.run() },
+    { name: "EchoSoftware", run: () => EchosoftwareJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);
