@@ -1,5 +1,5 @@
 import {
-  AbnormalJobScraper,
+  AbnormalJobHandler,
   AnomaloJobScraper,
   CardinalopsJobScraper,
   ChecklyJobHandler,
@@ -346,7 +346,7 @@ async function main() {
   let errorCount = 0;
 
   const scrapers = [
-    { name: "Abnormal", run: () => AbnormalJobScraper.run() },
+    { name: "Abnormal", run: () => AbnormalJobHandler.run() },
     { name: "Anomalo", run: () => AnomaloJobScraper.run() },
     { name: "Cardinalops", run: () => CardinalopsJobScraper.run() },
     { name: "Checkly", run: () => ChecklyJobHandler.run() },
