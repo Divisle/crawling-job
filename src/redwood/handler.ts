@@ -18,32 +18,26 @@ export class RedwoodJobHandler {
 
   async scrapeJobs(): Promise<Prisma.RedwoodJobCreateInput[]> {
     try {
-      const payload = {
-        appliedFacets: {},
-        limit: 20,
-        offset: 0,
-        searchText: "",
-      };
       const response: {
         data: {
-          jobPostings: {
+          jobs: {
             title: string;
-            locationsText: string;
-            externalPath: string;
+            absolute_url: string;
+            location: {
+              name: string;
+            };
           }[];
         };
-      } = await axios.post(
-        "https://redwood.wd1.myworkdayjobs.com/wday/cxs/redwood/RWCareers/jobs",
-        payload
+      } = await axios.get(
+        "https://boards-api.greenhouse.io/v1/boards/redwoodsoftware/jobs"
       );
-      const data: Prisma.RedwoodJobCreateInput[] =
-        response.data.jobPostings.map((job) => ({
+      const data: Prisma.RedwoodJobCreateInput[] = response.data.jobs.map(
+        (job) => ({
           title: job.title,
-          location: job.locationsText || "No Location",
-          href:
-            "https://redwood.wd1.myworkdayjobs.com/en-US/RWCareers" +
-            job.externalPath,
-        }));
+          location: job.location.name || "No Location",
+          href: job.absolute_url,
+        })
+      );
       // console.log(`Scraped ${data.length} jobs from Redwood`);
       // console.log(data);
       return data;
@@ -102,8 +96,8 @@ export class RedwoodJobHandler {
   }
 }
 
-// RedwoodJobHandler.run().then(async (res) => {
+// RedwoodJobHandler.run().then((res) => {
 //   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
+//     buildMessage(res.channel, res.blocks);
 //   }
 // });
