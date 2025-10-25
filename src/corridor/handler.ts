@@ -20,7 +20,7 @@ export class CorridorJobHandler {
     try {
       const response: {
         data: string;
-      } = await axios.get("https://corridor.dev/assets/jobs-CZ8kResy.js");
+      } = await axios.get("https://corridor.dev/assets/jobs-BqQxu33K.js");
       const result: {
         id: string;
         title: string;
