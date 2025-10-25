@@ -52,7 +52,6 @@ export class PactumJobHandler {
       } = await axios.get(
         "https://api.teamtailor.com/v1/jobs?&api_key=T144Dnz4dCH8qypvyPZP4idGz954MGS4VLfWbb1b&api_version=20161108&include=locations,regions&fields[locations]=name,city&fields[regions]=name"
       );
-      console.log("Response data:", response.data.data[0].links);
       const data: Prisma.PactumJobCreateInput[] = response.data.data.map(
         (job) => {
           const locationIds = job.relationships.locations.data.map(

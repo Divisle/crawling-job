@@ -42,12 +42,11 @@ export class ResolveJobRepository {
     const existingJobs = await this.getAll();
 
     data.forEach((job) => {
-      const existingJob = existingJobs.find((j) => j.href === job.href);
+      const existingJob = existingJobs.find(
+        (j) => j.href === job.href && j.location === job.location
+      );
       if (existingJob) {
-        if (
-          existingJob.title === job.title &&
-          existingJob.location === job.location
-        ) {
+        if (existingJob.title === job.title) {
         } else {
           updateJobs.push({
             id: existingJob.id,
@@ -65,7 +64,9 @@ export class ResolveJobRepository {
       }
     });
     existingJobs.forEach((job) => {
-      const locExists = data.find((j) => j.href === job.href);
+      const locExists = data.find(
+        (j) => j.href === job.href && j.location === job.location
+      );
       if (!locExists) {
         deleteJobs.push({
           id: job.id,

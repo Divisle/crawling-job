@@ -205,9 +205,11 @@ model EnterpretJob {
   id          String   @id @default(uuid())
   title       String
   location    String
-  href        String  @unique
+  href        String  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([location, href])
 }
 
 model SeeChangeJob {
@@ -1139,9 +1141,11 @@ model PenteraJob {
   id          String   @id @default(uuid())
   title       String
   location    String
-  href        String  @unique
+  href        String  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([location, href])
 }
 
 model PlayzeroJob {
@@ -1175,9 +1179,11 @@ model ResolveJob {
   id          String   @id @default(uuid())
   title       String
   location    String
-  href        String  @unique
+  href        String  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([location, href])
 }
 
 model SeonJob {

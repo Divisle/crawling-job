@@ -50,6 +50,7 @@ export class EnterpretJobRepository {
         ) {
         } else {
           updateJobs.push({
+            id: existingJob.id,
             title: job.title,
             location: job.location,
             href: job.href,
