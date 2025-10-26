@@ -194,10 +194,11 @@ Job role: Senior Software Engineer
 1. Create company directory: `src/new-company/`
 2. Implement handler with required methods:
 
-   - `scrapeJobs()`: Extract job data
-   - `filterData()`: Detect changes
-   - `sendMessage()`: Format Slack notification
-   - `static run()`: Main execution method
+
+    - `scrapeJobs()`: Extract job data
+    - `filterData()`: Detect changes
+    - `sendMessage()`: Format Slack notification
+    - `static run()`: Main execution method
 
 3. Update database schema if needed:
 
