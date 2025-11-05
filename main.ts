@@ -269,6 +269,17 @@ import {
   LancedbJobHandler,
   Adaptive6JobHandler,
   AxionJobHandler,
+  LightJobHandler,
+  GetimpalaJobHandler,
+  ArdoqJobHandler,
+  MondooJobHandler,
+  KernelJobHandler,
+  FlowJobHandler,
+  NebiusJobHandler,
+  AnyscaleJobHandler,
+  CollateJobHandler,
+  GladiaJobHandler,
+  WonderfulJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -620,6 +631,17 @@ async function main() {
     { name: "LanceDB", run: () => LancedbJobHandler.run() },
     { name: "Adaptive6", run: () => Adaptive6JobHandler.run() },
     { name: "Axion", run: () => AxionJobHandler.run() },
+    { name: "Light", run: () => LightJobHandler.run() },
+    { name: "GetImpala", run: () => GetimpalaJobHandler.run() },
+    { name: "Ardoq", run: () => ArdoqJobHandler.run() },
+    { name: "Mondoo", run: () => MondooJobHandler.run() },
+    { name: "Kernel", run: () => KernelJobHandler.run() },
+    { name: "Flow", run: () => FlowJobHandler.run() },
+    { name: "Nebius", run: () => NebiusJobHandler.run() },
+    { name: "Anyscale", run: () => AnyscaleJobHandler.run() },
+    { name: "Collate", run: () => CollateJobHandler.run() },
+    { name: "Gladia", run: () => GladiaJobHandler.run() },
+    { name: "Wonderful", run: () => WonderfulJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);
