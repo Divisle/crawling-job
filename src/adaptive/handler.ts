@@ -1,17 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { EnergyRoboticsJobRepository } from "./database";
-import {
-  AshbyhqPostApiPayload,
-  JobMessageData,
-  buildJobMessage,
-} from "../template";
+import { Adaptive6JobRepository } from "./database";
+import { JobMessageData, buildJobMessage } from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class EnergyRoboticsJobHandler {
-  constructor(
-    private db = new EnergyRoboticsJobRepository(new PrismaClient())
-  ) {
+export class Adaptive6JobHandler {
+  constructor(private db = new Adaptive6JobRepository(new PrismaClient())) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -22,24 +16,29 @@ export class EnergyRoboticsJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.EnergyRoboticsJobCreateInput[]> {
+  async scrapeJobs(): Promise<Prisma.Adaptive6JobCreateInput[]> {
     try {
       const response: {
         data: {
           name: string;
-          id: string;
-          office: string;
+          location: {
+            name: string;
+          };
+          url_active_page: string;
+          uid: string;
         }[];
       } = await axios.get(
-        "https://energy-robotics.jobs.personio.de/search.json"
+        "https://www.comeet.co/careers-api/2.0/company/AA.000/positions?token=AA04A6035205FA0154015401FE0003FC0"
       );
-      const data: Prisma.EnergyRoboticsJobCreateInput[] = response.data.map(
-        (posting) => ({
-          title: posting.name,
-          location: posting.office,
-          href: `https://energy-robotics.jobs.personio.de/job/${posting.id}`,
+      const data: Prisma.Adaptive6JobCreateInput[] = response.data.map(
+        (job) => ({
+          title: job.name,
+          location: job.location?.name || "No Location",
+          href: job.url_active_page,
         })
       );
+      // console.log(`Scraped ${data.length} jobs from Adaptive6`);
+      // console.log(data);
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
@@ -48,7 +47,7 @@ export class EnergyRoboticsJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.EnergyRoboticsJobCreateInput[]
+    jobData: Prisma.Adaptive6JobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -79,8 +78,8 @@ export class EnergyRoboticsJobHandler {
   async sendMessage(data: JobMessageData[]) {
     const blocks = buildJobMessage(
       data,
-      "Energy Robotics",
-      "https://www.energy-robotics.com/",
+      "Adaptive6",
+      "https://www.adaptive6.com/",
       1
     );
     return {
@@ -90,7 +89,7 @@ export class EnergyRoboticsJobHandler {
   }
 
   static async run() {
-    const handler = new EnergyRoboticsJobHandler();
+    const handler = new Adaptive6JobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -101,7 +100,7 @@ export class EnergyRoboticsJobHandler {
   }
 }
 
-// EnergyRoboticsJobHandler.run().then(async (res) => {
+// Adaptive6JobHandler.run().then(async (res) => {
 //   if (res.blocks.length > 0) {
 //     await buildMessage(res.channel, res.blocks);
 //   }
