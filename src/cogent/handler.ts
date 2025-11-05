@@ -84,11 +84,11 @@ export class CogentJobHandler {
       data,
       "Cogent Security",
       "https://www.cogent.security/",
-      2
+      1
     );
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 
