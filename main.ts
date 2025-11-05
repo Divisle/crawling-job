@@ -265,6 +265,10 @@ import {
   BluefishJobHandler,
   RunzeroJobHandler,
   EchosoftwareJobHandler,
+  EnergyRoboticsJobHandler,
+  LancedbJobHandler,
+  Adaptive6JobHandler,
+  AxionJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -612,6 +616,10 @@ async function main() {
     { name: "Bluefish", run: () => BluefishJobHandler.run() },
     { name: "RunZero", run: () => RunzeroJobHandler.run() },
     { name: "EchoSoftware", run: () => EchosoftwareJobHandler.run() },
+    { name: "EnergyRobotics", run: () => EnergyRoboticsJobHandler.run() },
+    { name: "LanceDB", run: () => LancedbJobHandler.run() },
+    { name: "Adaptive6", run: () => Adaptive6JobHandler.run() },
+    { name: "Axion", run: () => AxionJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);
