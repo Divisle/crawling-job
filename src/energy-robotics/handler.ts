@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { LancedbJobRepository } from "./database";
+import { EnergyRoboticsJobRepository } from "./database";
 import {
   AshbyhqPostApiPayload,
   JobMessageData,
@@ -8,8 +8,10 @@ import {
 import axios from "axios";
 import { buildMessage } from "../global";
 
-export class LancedbJobHandler {
-  constructor(private db = new LancedbJobRepository(new PrismaClient())) {
+export class EnergyRoboticsJobHandler {
+  constructor(
+    private db = new EnergyRoboticsJobRepository(new PrismaClient())
+  ) {
     if (!process.env.SLACK_BOT_TOKEN) {
       console.log("SLACK_BOT_TOKEN is not defined");
       return process.exit(1);
@@ -20,29 +22,24 @@ export class LancedbJobHandler {
     }
   }
 
-  async scrapeJobs(): Promise<Prisma.LancedbJobCreateInput[]> {
-    const payload = {
-      operationName: "ApiJobBoardWithTeams",
-      variables: {
-        organizationHostedJobsPageName: "lancedb",
-      },
-      query:
-        "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
-    };
-
+  async scrapeJobs(): Promise<Prisma.EnergyRoboticsJobCreateInput[]> {
     try {
       const response: {
-        data: AshbyhqPostApiPayload;
-      } = await axios.post(
-        "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
-        payload
+        data: {
+          name: string;
+          id: string;
+          office: string;
+        }[];
+      } = await axios.get(
+        "https://energy-robotics.jobs.personio.de/search.json"
       );
-      const data: Prisma.LancedbJobCreateInput[] =
-        response.data.data.jobBoard.jobPostings.map((posting) => ({
-          title: posting.title,
-          location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/lancedb/${posting.id}`,
-        }));
+      const data: Prisma.EnergyRoboticsJobCreateInput[] = response.data.map(
+        (posting) => ({
+          title: posting.name,
+          location: posting.office,
+          href: `https://energy-robotics.jobs.personio.de/job/${posting.id}`,
+        })
+      );
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
@@ -51,7 +48,7 @@ export class LancedbJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LancedbJobCreateInput[]
+    jobData: Prisma.EnergyRoboticsJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -80,7 +77,12 @@ export class LancedbJobHandler {
   }
 
   async sendMessage(data: JobMessageData[]) {
-    const blocks = buildJobMessage(data, "LanceDB", "https://lancedb.com/", 1);
+    const blocks = buildJobMessage(
+      data,
+      "Energy Robotics",
+      "https://www.energy-robotics.com/",
+      1
+    );
     return {
       blocks,
       channel: 1,
@@ -88,7 +90,7 @@ export class LancedbJobHandler {
   }
 
   static async run() {
-    const handler = new LancedbJobHandler();
+    const handler = new EnergyRoboticsJobHandler();
     const data = await handler.scrapeJobs();
     const filteredData = await handler.filterData(data);
     if (filteredData.length === 0) {
@@ -99,8 +101,8 @@ export class LancedbJobHandler {
   }
 }
 
-// LancedbJobHandler.run().then(async (res) => {
-//   if (res.blocks.length > 0) {
-//     await buildMessage(res.channel, res.blocks);
-//   }
-// });
+EnergyRoboticsJobHandler.run().then(async (res) => {
+  if (res.blocks.length > 0) {
+    await buildMessage(res.channel, res.blocks);
+  }
+});
