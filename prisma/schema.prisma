@@ -2671,3 +2671,21 @@ model AnyscaleJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model GetimpalaJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LightJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
