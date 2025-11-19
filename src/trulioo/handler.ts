@@ -1,6 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { TruliooJobRepository } from "./database";
-import { JobMessageData, buildJobMessage } from "../template";
+import {
+  AshbyhqPostApiPayload,
+  JobMessageData,
+  buildJobMessage,
+} from "../template";
 import axios from "axios";
 import { buildMessage } from "../global";
 
@@ -17,29 +21,28 @@ export class TruliooJobHandler {
   }
 
   async scrapeJobs(): Promise<Prisma.TruliooJobCreateInput[]> {
+    const payload = {
+      operationName: "ApiJobBoardWithTeams",
+      variables: {
+        organizationHostedJobsPageName: "trulioo",
+      },
+      query:
+        "query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    teams {\n      id\n      name\n      parentTeamId\n      __typename\n    }\n    jobPostings {\n      id\n      title\n      teamId\n      locationId\n      locationName\n      workplaceType\n      employmentType\n      secondaryLocations {\n        ...JobPostingSecondaryLocationParts\n        __typename\n      }\n      compensationTierSummary\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment JobPostingSecondaryLocationParts on JobPostingSecondaryLocation {\n  locationId\n  locationName\n  __typename\n}",
+    };
+
     try {
       const response: {
-        data: {
-          jobs: {
-            title: string;
-            absolute_url: string;
-            location: {
-              name: string;
-            };
-          }[];
-        };
-      } = await axios.get(
-        "https://boards-api.greenhouse.io/v1/boards/trulioo/jobs"
+        data: AshbyhqPostApiPayload;
+      } = await axios.post(
+        "https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams",
+        payload
       );
-      const data: Prisma.TruliooJobCreateInput[] = response.data.jobs.map(
-        (job) => ({
-          title: job.title,
-          location: job.location.name || "No Location",
-          href: job.absolute_url,
-        })
-      );
-      // console.log(`Scraped ${data.length} jobs from Trulioo`);
-      // console.log(data);
+      const data: Prisma.TruliooJobCreateInput[] =
+        response.data.data.jobBoard.jobPostings.map((posting) => ({
+          title: posting.title,
+          location: posting.locationName,
+          href: `https://www.trulioo.com/apply?ashby_jid=${posting.id}`,
+        }));
       return data;
     } catch (error) {
       console.error("Error scraping jobs:", error);
