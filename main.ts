@@ -419,7 +419,7 @@ async function main() {
     { name: "Honeycomb", run: () => HoneycombJobHandler.run() },
     { name: "Incident", run: () => IncidentJobHandler.run() },
     { name: "Island", run: () => IslandJobHandler.run() },
-    { name: "Kurrent", run: () => KurrentJobHandler.run() },
+    // { name: "Kurrent", run: () => KurrentJobHandler.run() },
     { name: "LaunchDarkly", run: () => LaunchDarklyJobHandler.run() },
     { name: "Mabl", run: () => MablJobHandler.run() },
     { name: "Maze", run: () => MazeJobHandler.run() },

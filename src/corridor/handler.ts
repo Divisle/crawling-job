@@ -26,7 +26,7 @@ export class CorridorJobHandler {
         title: string;
         jobUrl: string;
         location: string;
-      }[] = eval(response.data.split("const e=")[1].split(",o={jobs:")[0]);
+      }[] = eval(response.data.split("const e=")[1].split(",n={jobs:")[0]);
       const data: Prisma.CorridorJobCreateInput[] = result.map((job) => ({
         title: job.title,
         href: job.jobUrl,
