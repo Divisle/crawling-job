@@ -21,7 +21,7 @@ export class RunrevealJobHandler {
       const response: {
         data: string;
       } = await axios.get(
-        "https://runreveal.com/_next/static/chunks/app/careers/page-f3ab44d7bd238c17.js"
+        "https://runreveal.com/_next/static/chunks/app/careers/page-7a79a91d67e7f200.js"
       );
       const jobs: {
         title: string;
