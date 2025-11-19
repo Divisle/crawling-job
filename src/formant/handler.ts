@@ -47,10 +47,10 @@ export class FormantJobScraper {
     );
     for (const jobElement of jobElements) {
       const href = await jobElement
-        .findElement(By.xpath(".//a[@class='css-1a75djn-Anchor e1tt4etm0']"))
+        .findElement(By.xpath(".//a[contains(@class, 'css-1a75djn-Anchor')]"))
         .getAttribute("href");
       const title = await jobElement
-        .findElement(By.xpath(".//a[@class='css-1a75djn-Anchor e1tt4etm0']"))
+        .findElement(By.xpath(".//a[contains(@class, 'css-1a75djn-Anchor')]"))
         .getText();
       const jobInformations = await jobElement.findElements(
         By.xpath(".//p[@class='css-htb71u-Body1Element']")
@@ -145,3 +145,8 @@ export class FormantJobScraper {
     await this.driver.quit();
   }
 }
+
+FormantJobScraper.run().then((message) => {
+  if (message.channel === 0) return;
+  buildMessage(message.channel, message.blocks);
+});
