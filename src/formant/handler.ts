@@ -146,7 +146,7 @@ export class FormantJobScraper {
   }
 }
 
-FormantJobScraper.run().then((message) => {
-  if (message.channel === 0) return;
-  buildMessage(message.channel, message.blocks);
-});
+// FormantJobScraper.run().then((message) => {
+//   if (message.channel === 0) return;
+//   buildMessage(message.channel, message.blocks);
+// });

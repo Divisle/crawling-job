@@ -37,7 +37,9 @@ export class PortJobScraper {
         href: item.url_active_page,
       });
     });
-    return jobData;
+    return Array.from(
+      new Map(jobData.map((item) => [item.href, item])).values()
+    );
   }
 
   async filterData(
@@ -112,3 +114,8 @@ export class PortJobScraper {
     return await scraper.sendMessage(filteredData);
   }
 }
+
+// PortJobScraper.run().then((message) => {
+//   if (message.channel === 0) return;
+//   buildMessage(message.channel, message.blocks);
+// });
