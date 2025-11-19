@@ -51,7 +51,7 @@ export class ResolveJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.ReplicateJobCreateInput[]
+    jobData: Prisma.ResolveJobCreateInput[]
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [

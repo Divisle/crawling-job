@@ -21,7 +21,7 @@ export class ResolveJobRepository {
 
   async deleteMany(ids: string[]): Promise<boolean> {
     try {
-      await this.prisma.replicateJob.deleteMany({
+      await this.prisma.resolveJob.deleteMany({
         where: {
           id: {
             in: ids,
