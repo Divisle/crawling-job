@@ -2689,3 +2689,12 @@ model LightJob {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model AlliumJob {
+  id          String   @id @default(uuid())
+  title       String
+  location    String
+  href        String  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
