@@ -280,6 +280,7 @@ import {
   CollateJobHandler,
   GladiaJobHandler,
   WonderfulJobHandler,
+  AlliumJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -642,6 +643,7 @@ async function main() {
     { name: "Collate", run: () => CollateJobHandler.run() },
     { name: "Gladia", run: () => GladiaJobHandler.run() },
     { name: "Wonderful", run: () => WonderfulJobHandler.run() },
+    { name: "Allium", run: () => AlliumJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);

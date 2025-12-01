@@ -279,3 +279,4 @@ export * from "./anyscale";
 export * from "./collate";
 export * from "./gladia";
 export * from "./wonderful";
+export * from "./allium";
