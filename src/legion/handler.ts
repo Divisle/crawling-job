@@ -65,7 +65,6 @@ export class LegionJobScraper {
       listTables.length !== aboutButtons.length
     ) {
       console.error("List length mismatch");
-      process.exit(1);
     }
     for (let i = 0; i < aboutButtons.length; i++) {
       const title = await listTitles[i].getText();
