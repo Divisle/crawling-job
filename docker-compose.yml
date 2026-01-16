@@ -4,7 +4,7 @@ services:
   crawling-job:
     build: .
     container_name: crawling-job
-    restart: unless-stopped
+    restart: always
     environment:
       - NODE_ENV=production
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
