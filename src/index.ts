@@ -280,3 +280,4 @@ export * from "./collate";
 export * from "./gladia";
 export * from "./wonderful";
 export * from "./allium";
+export * from "./dispatch";
