@@ -23,7 +23,7 @@ export class RedaccessJobHandler {
           link: string;
           title: { rendered: string };
         }[];
-      } = await axios.get("https://asimily.com/wp-json/wp/v2/job");
+      } = await axios.get("https://redaccess.io/wp-json/wp/v2/career");
       const data: Prisma.RedaccessJobCreateInput[] = response.data.map(
         (job) => {
           return {
