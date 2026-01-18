@@ -28,7 +28,7 @@ export class LegitJobHandler {
           uid: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/37.004/positions?token=7342B38159C159C40D41CD0073440D42404"
+        "https://www.comeet.co/careers-api/2.0/company/37.004/positions?token=7342B38159C159C40D41CD0073440D42404",
       );
       const data: Prisma.LegitJobCreateInput[] = response.data.map((job) => ({
         title: job.name,
@@ -45,7 +45,7 @@ export class LegitJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.LegitJobCreateInput[]
+    jobData: Prisma.LegitJobCreateInput[],
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -78,11 +78,11 @@ export class LegitJobHandler {
       data,
       "Legit Security",
       "https://www.legitsecurity.com/",
-      2
+      1,
     );
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 

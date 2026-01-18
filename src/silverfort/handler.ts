@@ -28,7 +28,7 @@ export class SilverFortJobHandler {
           uid: string;
         }[];
       } = await axios.get(
-        "https://www.comeet.co/careers-api/2.0/company/54.007/positions?token=45715B315B38AE22B8D051A0A457D051E61"
+        "https://www.comeet.co/careers-api/2.0/company/54.007/positions?token=45715B315B38AE22B8D051A0A457D051E61",
       );
       const data: Prisma.SilverFortJobCreateInput[] = response.data.map(
         (job) => ({
@@ -48,7 +48,7 @@ export class SilverFortJobHandler {
               .replaceAll("https://www.comeet.com/jobs/silverfort/54.007/", "")
               .replaceAll(job.uid, "") +
             "/all",
-        })
+        }),
       );
       // console.log(`Scraped ${data.length} jobs from SilverFort`);
       // console.log(data);
@@ -60,7 +60,7 @@ export class SilverFortJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.SilverFortJobCreateInput[]
+    jobData: Prisma.SilverFortJobCreateInput[],
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -93,11 +93,11 @@ export class SilverFortJobHandler {
       data,
       "Silver Fort",
       "https://www.silverfort.com/",
-      2
+      1,
     );
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 

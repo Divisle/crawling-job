@@ -40,7 +40,7 @@ export class PigmentJobHandler {
   }
 
   async filterData(
-    jobData: Prisma.PigmentJobCreateInput[]
+    jobData: Prisma.PigmentJobCreateInput[],
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -73,11 +73,11 @@ export class PigmentJobHandler {
       data,
       "Pigment",
       "https://www.pigment.com/",
-      2
+      1,
     );
     return {
       blocks,
-      channel: 2,
+      channel: 1,
     };
   }
 
