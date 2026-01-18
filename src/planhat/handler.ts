@@ -22,7 +22,7 @@ export class PlanhatScraper {
     options.addArguments(
       `--user-data-dir=/tmp/chrome_${Date.now()}_${Math.random()
         .toString(36)
-        .substring(2, 11)}`
+        .substring(2, 11)}`,
     );
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
@@ -30,6 +30,7 @@ export class PlanhatScraper {
     options.addArguments("--disable-gpu");
     options.addArguments("--disable-extensions");
     options.addArguments("--disable-plugins");
+    options.addArguments("--window-size=1920,1080");
 
     this.driver = new Builder()
       .forBrowser("chrome")
@@ -46,14 +47,14 @@ export class PlanhatScraper {
     // Additional wait to ensure all content is loaded
     await this.driver.sleep(2000);
     const jobElements = await this.driver.findElements(
-      By.xpath(".//div[@data-framer-name='All Positions']//a")
+      By.xpath(".//div[@data-framer-name='All Positions']//a"),
     );
     let jobData: Prisma.PlanhatJobCreateInput[] = [];
     for (let i = 0; i < jobElements.length; i++) {
       try {
         const jobElement = (
           await this.driver.findElements(
-            By.xpath(".//div[@data-framer-name='All Positions']//a")
+            By.xpath(".//div[@data-framer-name='All Positions']//a"),
           )
         )[i];
         const meta = await jobElement.findElements(By.xpath(".//p"));
@@ -76,7 +77,7 @@ export class PlanhatScraper {
   }
 
   async filterData(
-    jobData: Prisma.PlanhatJobCreateInput[]
+    jobData: Prisma.PlanhatJobCreateInput[],
   ): Promise<JobMessageData[]> {
     const filterData = await this.db.compareData(jobData);
     const listDeleteId = [
@@ -100,7 +101,7 @@ export class PlanhatScraper {
       data,
       "Planhat",
       "https://www.planhat.com/",
-      2
+      2,
     );
     return { blocks, channel: 2 };
   }

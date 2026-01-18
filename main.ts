@@ -282,6 +282,9 @@ import {
   WonderfulJobHandler,
   AlliumJobHandler,
   DispatchJobHandler,
+  AcceldataJobHandler,
+  MintlifyJobHandler,
+  RedaccessJobHandler,
 } from "./src";
 import { buildMessage } from "./src/global";
 
@@ -320,7 +323,7 @@ async function runScraperSafely(
   scraperFunction: () => Promise<{
     blocks: any[];
     channel: number;
-  }>
+  }>,
 ): Promise<{
   blocks: any[];
   channel: number;
@@ -338,7 +341,7 @@ async function runScraperSafely(
   } catch (error) {
     console.error(`❌ ${scraperName} failed with error:`);
     console.error(
-      `Error message: ${error instanceof Error ? error.message : String(error)}`
+      `Error message: ${error instanceof Error ? error.message : String(error)}`,
     );
     if (error instanceof Error && error.stack) {
       console.error(`Stack trace: ${error.stack}`);
@@ -374,16 +377,16 @@ async function main() {
     { name: "Enterpret", run: () => EnterpretJobHandler.run() },
     { name: "FarSight", run: () => FarSightJobHandler.run() },
     { name: "FluidStack", run: () => FluidStackJobHandler.run() },
-    { name: "Formant", run: () => FormantJobScraper.run() },
+    // { name: "Formant", run: () => FormantJobScraper.run() }, // Comment by web request issue
     // { name: "Hightouch", run: () => HightouchJobScraper.run() },
-    { name: "Io", run: () => IoJobHandler.run() },
+    // { name: "Io", run: () => IoJobHandler.run() }, // Comment by web request issue
     { name: "Laurel", run: () => LaurelJobHandler.run() },
     { name: "Legion", run: () => LegionJobScraper.run() },
     // { name: "Lepton", run: () => LeptonJobScraper.run() },
     { name: "Loop", run: () => LoopJobHandler.run() },
     { name: "Lumos", run: () => LumosJobScraper.run() },
     // { name: "MaraTalent", run: () => MaraTalentHandler.run() },
-    { name: "Materialize", run: () => MaterializeJobScraper.run() },
+    // { name: "Materialize", run: () => MaterializeJobScraper.run() }, // Comment by web request issue
     { name: "Numeric", run: () => NumericJobHandler.run() },
     // { name: "Omnea", run: () => OmneaJobHandler.run() },
     { name: "Operantai", run: () => OperantaiJobScraper.run() },
@@ -392,7 +395,7 @@ async function main() {
     { name: "Recruitment", run: () => RecruitmentJobHandler.run() },
     { name: "Relyance", run: () => RelyanceJobHandler.run() },
     { name: "RoboFlow", run: () => RoboFlowJobScraper.run() },
-    { name: "Safe", run: () => SafeJobHandler.run() },
+    // { name: "Safe", run: () => SafeJobHandler.run() }, // Comment by web request issue
     // { name: "SeeChange", run: () => SeeChangeJobHandler.run() },
     { name: "Sysdig", run: () => SysdigJobHandler.run() },
     { name: "Teleport", run: () => TeleportJobHandler.run() },
@@ -466,11 +469,11 @@ async function main() {
     { name: "Opaque", run: () => OpaqueJobHandler.run() },
     { name: "ClickHouse", run: () => ClickHouseJobHandler.run() },
     { name: "Contextual", run: () => ContextualJobHandler.run() },
-    { name: "Corridor", run: () => CorridorJobHandler.run() },
+    // { name: "Corridor", run: () => CorridorJobHandler.run() }, // Comment by web request issue
     { name: "Decagon", run: () => DecagonJobHandler.run() },
     { name: "Dream", run: () => DreamJobHandler.run() },
     { name: "Elevenlabs", run: () => ElevenlabsJobHandler.run() },
-    { name: "Omni", run: () => OmniJobHandler.run() },
+    // { name: "Omni", run: () => OmniJobHandler.run() }, // Comment by web request issue
     { name: "Foundational", run: () => FoundationalJobHandler.run() },
     { name: "Horizon3", run: () => Horizon3JobHandler.run() },
     { name: "Instruqt", run: () => InstruqtJobHandler.run() },
@@ -505,7 +508,7 @@ async function main() {
     { name: "Casap", run: () => CasapJobHandler.run() },
     { name: "Cyfirma", run: () => CyfirmaJobHandler.run() },
     { name: "Dataiku", run: () => DataikuJobHandler.run() },
-    { name: "Ethyca", run: () => EthycaJobHandler.run() },
+    // { name: "Ethyca", run: () => EthycaJobHandler.run() }, // Comment by web request issue
     { name: "Exaforce", run: () => ExaforceJobHandler.run() },
     { name: "Fiddler", run: () => FiddlerJobHandler.run() },
     { name: "FlockSafety", run: () => FlockSafetyJobHandler.run() },
@@ -551,7 +554,7 @@ async function main() {
     { name: "Opsin", run: () => OpsinJobHandler.run() },
     { name: "Orkes", run: () => OrkesJobHandler.run() },
     { name: "Profound", run: () => ProfoundJobHandler.run() },
-    { name: "RunReveal", run: () => RunrevealJobHandler.run() },
+    // { name: "RunReveal", run: () => RunrevealJobHandler.run() }, // Comment by web request issue
     { name: "SuperAI", run: () => SuperAIJobHandler.run() },
     { name: "Symbiotic", run: () => SymbioticJobHandler.run() },
     { name: "Talos", run: () => TalosJobHandler.run() },
@@ -646,6 +649,9 @@ async function main() {
     { name: "Wonderful", run: () => WonderfulJobHandler.run() },
     { name: "Allium", run: () => AlliumJobHandler.run() },
     { name: "Dispatch", run: () => DispatchJobHandler.run() },
+    { name: "Acceldata", run: () => AcceldataJobHandler.run() },
+    { name: "Mintlify", run: () => MintlifyJobHandler.run() },
+    { name: "Redaccess", run: () => RedaccessJobHandler.run() },
   ];
 
   console.log(`📊 Total scrapers to run: ${scrapers.length}`);
@@ -672,7 +678,7 @@ async function main() {
   // Send all accumulated messages at once
   if (messageBlocks1.length > 0) {
     console.log(
-      `📨 Sending accumulated message to channel 1 with ${messageBlocks1.length} blocks from ${messageChannel1} scrapers.`
+      `📨 Sending accumulated message to channel 1 with ${messageBlocks1.length} blocks from ${messageChannel1} scrapers.`,
     );
     try {
       await buildMessage(1, messageBlocks1);
@@ -684,7 +690,7 @@ async function main() {
   }
   if (messageBlocks2.length > 0) {
     console.log(
-      `📨 Sending accumulated message to channel 2 with ${messageBlocks2.length} blocks from ${messageChannel2} scrapers.`
+      `📨 Sending accumulated message to channel 2 with ${messageBlocks2.length} blocks from ${messageChannel2} scrapers.`,
     );
     try {
       await buildMessage(2, messageBlocks2);
@@ -703,7 +709,7 @@ async function main() {
   console.log(`  ✅ Successful: ${successCount}`);
   console.log(`  ❌ Failed: ${errorCount}`);
   console.log(
-    `  📊 Success Rate: ${((successCount / scrapers.length) * 100).toFixed(1)}%`
+    `  📊 Success Rate: ${((successCount / scrapers.length) * 100).toFixed(1)}%`,
   );
   console.log(`🏁 All job scrapers completed at: ${new Date().toISOString()}`);
 }
