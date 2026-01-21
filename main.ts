@@ -438,7 +438,7 @@ async function main() {
     { name: "OrcaAI", run: () => OrcaAIScraper.run() },
     // { name: "PlaxidityX", run: () => PlaxidityxJobHandler.run() },
     { name: "Redwood", run: () => RedwoodJobHandler.run() },
-    { name: "Scytale", run: () => ScytaleJobHandler.run() },
+    // { name: "Scytale", run: () => ScytaleJobHandler.run() },
     // { name: "SingleStore", run: () => SingleStoreJobHandler.run() },
     { name: "SnorkelAI", run: () => SnorkelAIJobHandler.run() },
     { name: "TraceBit", run: () => TraceBitJobHandler.run() },
