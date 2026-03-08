@@ -41,7 +41,7 @@ export class DispatchJobHandler {
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/Dispatch/${posting.id}`,
+          href: `https://www.dispatch.io/careers?ashby_jid=${posting.id}`,
         }));
       return data;
     } catch (error) {

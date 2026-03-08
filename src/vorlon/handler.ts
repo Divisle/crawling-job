@@ -7,6 +7,7 @@ import {
 	DefaultJobMessageData,
 	JobMessageData,
 } from "../template";
+import { buildMessage } from "../global";
 
 export class VorlonJobScraper {
 	private driver: WebDriver;
@@ -135,3 +136,9 @@ export class VorlonJobScraper {
 		await this.driver.quit();
 	}
 }
+
+// VorlonJobScraper.run().then(async (res) => {
+// 	if (res.blocks.length > 0) {
+// 		await buildMessage(res.channel, res.blocks);
+// 	}
+// });
