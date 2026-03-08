@@ -124,3 +124,9 @@ export class CredoJobHandler {
     return await handler.sendMessage(filteredData);
   }
 }
+
+// CredoJobHandler.run().then(async (res) => {
+//   if (res.blocks.length > 0) {
+//     await buildMessage(res.channel, res.blocks);
+//   }
+// });

@@ -41,7 +41,7 @@ export class ApolloGraphQlJobHandler {
         response.data.data.jobBoard.jobPostings.map((posting) => ({
           title: posting.title,
           location: posting.locationName,
-          href: `https://jobs.ashbyhq.com/apollo-graphql/${posting.id}`,
+          href: `https://www.apollographql.com/careers/${posting.id}`,
         }));
       return data;
     } catch (error) {

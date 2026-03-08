@@ -3,6 +3,7 @@ import { WebaiRepository } from "./database";
 import { buildAshbyhqMessage, AshbyhqApiPayload } from "../template";
 import { buildJobMessage, JobMessageData } from "../template";
 import axios from "axios";
+import { buildMessage } from "../global";
 
 export class WebaiJobHandler {
 	constructor(private db = new WebaiRepository(new PrismaClient())) {
@@ -97,3 +98,9 @@ export class WebaiJobHandler {
 		return await handler.sendMessage(filteredData);
 	}
 }
+
+// WebaiJobHandler.run().then(async (res) => {
+// 	if (res.blocks.length > 0) {
+// 		await buildMessage(res.channel, res.blocks);
+// 	}
+// });

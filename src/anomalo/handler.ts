@@ -151,3 +151,9 @@ export class AnomaloJobScraper {
     await this.driver.quit();
   }
 }
+
+// AnomaloJobScraper.run().then((message) => {
+//   if (message.blocks.length > 0) {
+//     buildMessage(message.channel, message.blocks);
+//   }
+// });

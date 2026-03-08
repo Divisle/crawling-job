@@ -88,7 +88,7 @@ export class NumericJobHandler {
     );
     return {
       blocks,
-      channel: 1,
+      channel: 2,
     };
   }
 
